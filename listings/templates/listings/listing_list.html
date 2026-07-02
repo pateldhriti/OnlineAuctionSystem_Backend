@@ -1,33 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Listings</title>
-</head>
-<body>
-    <header>
-        <h1>Listings</h1>
-        <nav>
-            {% if user.is_authenticated %}
-                <a href="{% url 'listings:create' %}">Create listing</a>
-                |
-                <a href="{% url 'accounts:logout' %}">Logout</a>
-            {% else %}
-                <a href="{% url 'accounts:login' %}">Login</a>
-            {% endif %}
-        </nav>
-    </header>
+{% extends 'base.html' %}
 
-    {% if messages %}
-        {% for message in messages %}
-            <p>{{ message }}</p>
-        {% endfor %}
-    {% endif %}
+{% block title %}Listings{% endblock %}
 
+{% block content %}
+    <h2>Listings</h2>
     {% for listing in listings %}
         <article>
-            <h2>{{ listing.title }}</h2>
+            <h3>{{ listing.title }}</h3>
             <p>Starting price: ${{ listing.starting_price }}</p>
             <p>{{ listing.description }}</p>
             <p>Seller: {{ listing.seller.username }} | Created: {{ listing.created_at|date:"M d, Y" }}</p>
@@ -35,5 +14,4 @@
     {% empty %}
         <p>No listings have been created yet.</p>
     {% endfor %}
-</body>
-</html>
+{% endblock %}
