@@ -1,9 +1,13 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib import messages
+from django.shortcuts import render, redirect
+from django.utils.http import url_has_allowed_host_and_scheme
 
-from .forms import RegisterForm, LoginForm
+from .forms import RegisterForm, LoginForm, UserUpdateForm, ProfileForm
 from .models import UserProfile
+from .utils import get_recently_viewed_ids
 
 
 def register_view(request):
@@ -24,6 +28,7 @@ def register_view(request):
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('home')
+    next_url = request.GET.get('next', '')
     if request.method == 'POST':
         form = LoginForm(request.POST)
         if form.is_valid():
@@ -34,14 +39,65 @@ def login_view(request):
             )
             if user:
                 login(request, user)
-                next_url = request.GET.get('next', 'home')
-                return redirect(next_url)
+                redirect_to = request.POST.get('next', '')
+                if redirect_to and url_has_allowed_host_and_scheme(
+                    redirect_to, allowed_hosts={request.get_host()}
+                ):
+                    return redirect(redirect_to)
+                return redirect('home')
             messages.error(request, 'Invalid username or password.')
     else:
         form = LoginForm()
-    return render(request, 'accounts/login.html', {'form': form})
+    return render(request, 'accounts/login.html', {'form': form, 'next': next_url})
 
 
 def logout_view(request):
     logout(request)
     return redirect('accounts:login')
+
+
+@login_required
+def profile_view(request):
+    from listings.models import Listing
+    viewed_ids = get_recently_viewed_ids(request)
+    listings_map = {l.id: l for l in Listing.objects.filter(id__in=viewed_ids)}
+    recently_viewed = [listings_map[i] for i in viewed_ids if i in listings_map]
+    return render(request, 'accounts/profile.html', {
+        'recently_viewed': recently_viewed,
+    })
+
+
+@login_required
+def profile_edit_view(request):
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    if request.method == 'POST':
+        user_form = UserUpdateForm(request.POST, instance=request.user)
+        profile_form = ProfileForm(request.POST, instance=profile)
+        if user_form.is_valid() and profile_form.is_valid():
+            user_form.save()
+            profile_form.save()
+            messages.success(request, 'Profile updated successfully.')
+            return redirect('accounts:profile')
+    else:
+        user_form = UserUpdateForm(instance=request.user)
+        profile_form = ProfileForm(instance=profile)
+    return render(request, 'accounts/profile_edit.html', {
+        'user_form': user_form,
+        'profile_form': profile_form,
+    })
+
+
+@login_required
+def password_change_view(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(user=request.user, data=request.POST)
+        if form.is_valid():
+            form.save()
+            update_session_auth_hash(request, form.user)
+            messages.success(request, 'Password changed successfully.')
+            return redirect('accounts:profile')
+    else:
+        form = PasswordChangeForm(user=request.user)
+        for field in form.fields.values():
+            field.widget.attrs['class'] = 'form-control'
+    return render(request, 'accounts/password_change.html', {'form': form})
