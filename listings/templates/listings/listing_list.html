@@ -30,6 +30,7 @@
                         <span>Seller: {{ listing.seller.username }}</span>
                         <span>{{ listing.created_at|date:"M d, Y" }}</span>
                     </div>
+                    <a href="{% url 'bids:history' listing.pk %}" class="btn btn-outline-primary btn-sm m-2">View bids</a>
                 </div>
             </div>
         {% empty %}
