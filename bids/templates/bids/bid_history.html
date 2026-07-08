@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}Bid History — {{ listing.title }}{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-lg-7 mb-4">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <h2 class="mb-0">{{ listing.title }}</h2>
+                {% if listing.is_active %}
+                    <span class="badge text-bg-success">Active</span>
+                {% else %}
+                    <span class="badge text-bg-secondary">Closed</span>
+                {% endif %}
+            </div>
+            <p class="text-body-secondary">Seller: {{ listing.seller.username }}</p>
+            <p class="fs-4 fw-semibold text-primary">Current price: ${{ current_price }}</p>
+            <p>{{ listing.description }}</p>
+        </div>
+
+        <div class="col-lg-5">
+            {% if can_bid %}
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Place a bid</h5>
+                        <form method="post" action="{% url 'bids:place' listing.pk %}">
+                            {% csrf_token %}
+                            {{ form.amount }}
+                            {% for error in form.non_field_errors %}
+                                <div class="text-danger small mt-2">{{ error }}</div>
+                            {% endfor %}
+                            <button type="submit" class="btn btn-primary w-100 mt-3">Place bid</button>
+                        </form>
+                    </div>
+                </div>
+            {% elif not user.is_authenticated %}
+                <p><a href="{% url 'accounts:login' %}?next={{ request.path }}">Log in</a> to place a bid.</p>
+            {% elif listing.seller_id == user.pk %}
+                <p class="text-body-secondary">You can't bid on your own listing.</p>
+            {% elif not listing.is_active %}
+                <p class="text-body-secondary">This listing is closed for bidding.</p>
+            {% endif %}
+
+            <h5>Bid history</h5>
+            <ul class="list-group">
+                {% for bid in bids %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>{{ bid.bidder.username }}</span>
+                        <span class="fw-semibold">${{ bid.amount }}</span>
+                        <span class="text-body-secondary small">{{ bid.created_at|date:"M d, Y H:i" }}</span>
+                    </li>
+                {% empty %}
+                    <li class="list-group-item text-body-secondary">No bids yet. Be the first!</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+{% endblock %}
