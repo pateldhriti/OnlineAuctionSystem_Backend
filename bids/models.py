@@ -23,3 +23,12 @@ class Bid(models.Model):
 
     def __str__(self):
         return f'{self.bidder} bid {self.amount} on {self.listing}'
+
+    @classmethod
+    def highest_for(cls, listing):
+        return cls.objects.filter(listing=listing).first()
+
+    @classmethod
+    def current_price_for(cls, listing):
+        highest = cls.highest_for(listing)
+        return highest.amount if highest else listing.starting_price
