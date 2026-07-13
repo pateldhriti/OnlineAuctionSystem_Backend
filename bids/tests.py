@@ -81,8 +81,21 @@ class PlaceBidViewTests(TestCase):
             {'amount': '30.00'},
         )
 
-        self.assertRedirects(response, reverse('bids:history', args=[self.listing.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Your bid must be higher than the current price')
         self.assertEqual(Bid.objects.count(), 1)
+
+    def test_invalid_amount_reshows_form_with_field_error(self):
+        self.client.force_login(self.bidder)
+
+        response = self.client.post(
+            reverse('bids:place', args=[self.listing.pk]),
+            {'amount': '-5.00'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Bid amount must be greater than zero.')
+        self.assertEqual(Bid.objects.count(), 0)
 
     def test_seller_cannot_bid_on_own_listing(self):
         self.client.force_login(self.seller)
@@ -92,7 +105,8 @@ class PlaceBidViewTests(TestCase):
             {'amount': '30.00'},
         )
 
-        self.assertRedirects(response, reverse('bids:history', args=[self.listing.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "You can't bid on your own listing.")
         self.assertEqual(Bid.objects.count(), 0)
 
     def test_cannot_bid_on_inactive_listing(self):
@@ -105,7 +119,8 @@ class PlaceBidViewTests(TestCase):
             {'amount': '30.00'},
         )
 
-        self.assertRedirects(response, reverse('bids:history', args=[self.listing.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'This listing is closed for bidding.')
         self.assertEqual(Bid.objects.count(), 0)
 
     def test_cannot_bid_after_end_time_even_if_still_marked_active(self):
@@ -118,7 +133,8 @@ class PlaceBidViewTests(TestCase):
             {'amount': '30.00'},
         )
 
-        self.assertRedirects(response, reverse('bids:history', args=[self.listing.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'This listing is closed for bidding.')
         self.assertEqual(Bid.objects.count(), 0)
 
 

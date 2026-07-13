@@ -6,6 +6,8 @@ from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
+from accounts.utils import add_to_recently_viewed
+
 from .forms import ListingForm
 from .models import Listing
 
@@ -56,6 +58,7 @@ def listing_detail(request, pk):
         request.user.is_authenticated
         and listing.watchers.filter(pk=request.user.pk).exists()
     )
+    add_to_recently_viewed(request, listing.pk)
     return JsonResponse(
         {
             'id': listing.pk,

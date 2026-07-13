@@ -29,13 +29,21 @@
                 <div class="card shadow-sm mb-4">
                     <div class="card-body">
                         <h5 class="card-title">Place a bid</h5>
-                        <form method="post" action="{% url 'bids:place' listing.pk %}">
+                        <form method="post" action="{% url 'bids:place' listing.pk %}" novalidate>
                             {% csrf_token %}
-                            {{ form.amount }}
-                            {% for error in form.non_field_errors %}
-                                <div class="text-danger small mt-2">{{ error }}</div>
+                            {% if form.non_field_errors %}
+                                <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                            {% endif %}
+                            {% for field in form %}
+                                <div class="mb-3">
+                                    <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                    {{ field }}
+                                    {% if field.errors %}
+                                        <div class="text-danger small mt-1">{{ field.errors|striptags }}</div>
+                                    {% endif %}
+                                </div>
                             {% endfor %}
-                            <button type="submit" class="btn btn-primary w-100 mt-3">Place bid</button>
+                            <button type="submit" class="btn btn-primary w-100">Place bid</button>
                         </form>
                     </div>
                 </div>
