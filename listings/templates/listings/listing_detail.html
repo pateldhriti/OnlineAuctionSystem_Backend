@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ listing.title }}{% endblock %}
+
+{% block content %}
+    <div data-live-listing-url="{% url 'listings:detail' listing.pk %}">
+        <div class="d-flex justify-content-between align-items-start mb-4">
+            <div>
+                <a class="small text-decoration-none" href="{% url 'listings:list' %}">Back to listings</a>
+                <h2 class="mb-1">{{ listing.title }}</h2>
+                <p class="text-body-secondary mb-0">
+                    Seller: {{ listing.seller.username }} &middot; {{ listing.get_category_display }}
+                </p>
+            </div>
+            {% if is_open %}
+                <span class="badge text-bg-success" data-listing-status>Active</span>
+            {% else %}
+                <span class="badge text-bg-secondary" data-listing-status>Closed</span>
+            {% endif %}
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-7">
+                {% if listing.image %}
+                    <img class="img-fluid rounded border bg-white mb-3" src="{{ listing.image.url }}" alt="{{ listing.title }}">
+                {% endif %}
+                <div class="bg-white border rounded p-4">
+                    <h5>Description</h5>
+                    <p class="mb-0">{{ listing.description }}</p>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="card shadow-sm mb-3">
+                    <div class="card-body">
+                        <p class="text-body-secondary mb-1">Current highest bid</p>
+                        <p class="display-6 fw-semibold text-primary mb-1" data-current-price>${{ current_price }}</p>
+                        {% if highest_bid %}
+                            <p class="mb-0">
+                                Leading bidder:
+                                <span class="fw-semibold" data-leading-bidder>{{ highest_bid.bidder.username }}</span>
+                            </p>
+                        {% else %}
+                            <p class="mb-0 text-body-secondary" data-leading-bidder>No bids yet</p>
+                        {% endif %}
+                        <p class="small text-body-secondary mt-2 mb-0" data-bid-count>
+                            {{ bid_count }} bid{{ bid_count|pluralize }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm mb-3">
+                    <div class="card-body">
+                        <p class="text-body-secondary mb-1">Time remaining</p>
+                        {% if listing.ends_at %}
+                            <p class="fs-4 fw-semibold mb-0" data-ends-at="{{ listing.ends_at|date:'c' }}">Loading...</p>
+                        {% else %}
+                            <p class="fs-4 fw-semibold mb-0">No end time set</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <a class="btn btn-primary" href="{% url 'bids:history' listing.pk %}">
+                        {% if is_open and user.is_authenticated and listing.seller_id != user.pk %}
+                            Place bid
+                        {% else %}
+                            View bids
+                        {% endif %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'listings/live_listing.js' %}"></script>
+{% endblock %}
