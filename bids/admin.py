@@ -5,7 +5,8 @@ from .models import Bid
 
 @admin.register(Bid)
 class BidAdmin(admin.ModelAdmin):
-    list_display = ['listing', 'bidder', 'amount', 'created_at']
-    list_filter = ['created_at']
+    list_display = ['listing', 'bidder', 'amount', 'is_winner', 'created_at']
+    list_filter = ['is_winner', 'created_at']
     search_fields = ['listing__title', 'bidder__username']
     readonly_fields = ['created_at']
+    date_hierarchy = 'created_at'

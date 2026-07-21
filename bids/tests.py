@@ -183,3 +183,30 @@ class BidHistoryViewTests(TestCase):
         response = self.client.get(reverse('bids:history', args=[self.listing.pk]))
 
         self.assertFalse(response.context['can_bid'])
+
+
+class BidAdminTests(TestCase):
+    def setUp(self):
+        self.admin_user = User.objects.create_superuser(
+            username='admin', password='pass12345', email='admin@example.com',
+        )
+        self.seller = User.objects.create_user(username='seller', password='pass12345')
+        self.bidder = User.objects.create_user(username='bidder', password='pass12345')
+        self.listing = Listing.objects.create(
+            seller=self.seller,
+            title='Vintage Clock',
+            description='A small table clock.',
+            starting_price='25.00',
+        )
+
+    def test_changelist_shows_bid_and_winner_flag(self):
+        Bid.objects.create(
+            listing=self.listing, bidder=self.bidder, amount='30.00', is_winner=True,
+        )
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse('admin:bids_bid_changelist'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Vintage Clock')
+        self.assertContains(response, '30.00')

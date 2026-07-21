@@ -4,6 +4,10 @@ from django.conf.urls.static import static
 from django.urls import path, include
 from listings import views as listing_views
 
+admin.site.site_header = 'Online Auction Administration'
+admin.site.site_title = 'Online Auction Admin'
+admin.site.index_title = 'Site Administration'
+
 urlpatterns = [
     path('', listing_views.listing_list, name='home'),
     path('admin/', admin.site.urls),

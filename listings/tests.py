@@ -4,6 +4,7 @@ from datetime import timedelta
 
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.management import call_command
 from django.test import TestCase
 from django.test.utils import override_settings
 from django.urls import reverse
@@ -295,3 +296,54 @@ class ListingViewTests(TestCase):
         titles = [listing['title'] for listing in response.json()['listings']]
         self.assertIn(watched_listing.title, titles)
         self.assertNotIn(other_listing.title, titles)
+
+
+class ListingAdminTests(TestCase):
+    def setUp(self):
+        self.admin_user = User.objects.create_superuser(
+            username='admin', password='pass12345', email='admin@example.com',
+        )
+        self.seller = User.objects.create_user(username='seller', password='pass12345')
+        self.listing = Listing.objects.create(
+            seller=self.seller,
+            title='Vintage Clock',
+            description='A small table clock.',
+            starting_price='25.00',
+        )
+
+    def test_changelist_shows_listing_and_status(self):
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse('admin:listings_listing_changelist'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Vintage Clock')
+        self.assertContains(response, Listing.STATUS_ACTIVE)
+
+    def test_change_page_shows_bid_inline(self):
+        Bid.objects.create(listing=self.listing, bidder=self.seller, amount='30.00')
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse('admin:listings_listing_change', args=[self.listing.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '30.00')
+
+
+class SeedDemoCommandTests(TestCase):
+    def test_seed_demo_creates_expected_data(self):
+        call_command('seed_demo')
+
+        self.assertTrue(User.objects.filter(username='admin', is_superuser=True).exists())
+        self.assertEqual(Listing.objects.count(), 3)
+        clock = Listing.objects.get(title='Antique Wall Clock')
+        self.assertEqual(clock.status, Listing.STATUS_CLOSED)
+        self.assertTrue(Bid.objects.filter(listing=clock, is_winner=True).exists())
+
+    def test_seed_demo_is_idempotent(self):
+        call_command('seed_demo')
+        call_command('seed_demo')
+
+        self.assertEqual(User.objects.filter(username='admin').count(), 1)
+        self.assertEqual(Listing.objects.count(), 3)
+        self.assertEqual(Bid.objects.count(), 5)
