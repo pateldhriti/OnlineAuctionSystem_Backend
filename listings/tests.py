@@ -153,6 +153,19 @@ class ListingViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Highest bid: $40.00')
 
+    def test_list_view_paginates_listings(self):
+        from listings.views import LISTINGS_PAGE_SIZE
+
+        for i in range(LISTINGS_PAGE_SIZE + 1):
+            self.make_listing(title=f'Listing {i}')
+
+        first_page = self.client.get(reverse('listings:list'))
+        second_page = self.client.get(reverse('listings:list'), {'page': 2})
+
+        self.assertEqual(len(first_page.context['page_obj']), LISTINGS_PAGE_SIZE)
+        self.assertEqual(len(second_page.context['page_obj']), 1)
+        self.assertContains(first_page, 'Page 1 of 2')
+
     def test_list_view_filters_by_category(self):
         self.make_listing(title='Vintage Clock', category=Listing.Category.HOME)
         self.make_listing(title='Bluetooth Speaker', category=Listing.Category.ELECTRONICS)
@@ -216,6 +229,41 @@ class ListingViewTests(TestCase):
         self.assertEqual(listing.seller, self.user)
         self.assertEqual(listing.category, Listing.Category.HOME)
         self.assertTrue(listing.image.name.startswith('listing_images/'))
+
+    def test_create_listing_form_accepts_multipart_encoding(self):
+        """The rendered form must be able to actually submit the image field.
+
+        Django's test client always sends multipart/form-data regardless of
+        the HTML form's own enctype, so it can't catch a missing
+        enctype="multipart/form-data" attribute on the <form> tag - assert on
+        the rendered markup directly instead.
+        """
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('listings:create'))
+
+        self.assertContains(response, 'enctype="multipart/form-data"')
+
+    def test_create_listing_rejects_oversized_image(self):
+        from unittest.mock import patch
+
+        self.client.force_login(self.user)
+
+        with patch('listings.forms.MAX_IMAGE_SIZE_BYTES', 10):
+            response = self.client.post(
+                reverse('listings:create'),
+                {
+                    'title': 'Desk Lamp',
+                    'description': 'Adjustable lamp.',
+                    'category': Listing.Category.HOME,
+                    'starting_price': '15.50',
+                    'image': self.make_image(),
+                },
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Image must be smaller than 5MB.')
+        self.assertFalse(Listing.objects.filter(title='Desk Lamp').exists())
 
     def test_listing_owner_can_update_listing(self):
         listing = self.make_listing()
@@ -330,7 +378,14 @@ class ListingAdminTests(TestCase):
         self.assertContains(response, '30.00')
 
 
+@override_settings(DEBUG=True)
 class SeedDemoCommandTests(TestCase):
+    """Django's test runner forces DEBUG=False by default, which would trip
+    seed_demo's production guard for every test here except the one that's
+    actually testing that guard - so this class overrides DEBUG=True and
+    the guard test below overrides it back to False just for that one case.
+    """
+
     def test_seed_demo_creates_expected_data(self):
         call_command('seed_demo')
 
@@ -347,3 +402,12 @@ class SeedDemoCommandTests(TestCase):
         self.assertEqual(User.objects.filter(username='admin').count(), 1)
         self.assertEqual(Listing.objects.count(), 3)
         self.assertEqual(Bid.objects.count(), 5)
+
+    def test_seed_demo_refuses_to_run_with_debug_false(self):
+        from django.core.management import CommandError
+
+        with override_settings(DEBUG=False):
+            with self.assertRaises(CommandError):
+                call_command('seed_demo')
+
+        self.assertFalse(User.objects.filter(username='admin').exists())

@@ -135,6 +135,29 @@ class CloseAuctionTests(TestCase):
         self.listing.refresh_from_db()
         self.assertEqual(self.listing.status, Listing.STATUS_CLOSED)
 
+    def test_close_auction_survives_a_broken_notification_email(self):
+        """A send_mail failure (e.g. a header-validation error from a listing
+        title containing newlines) must not stop the listing from being
+        closed and the winner from being marked - it should just skip the
+        notification.
+        """
+        from unittest.mock import patch
+
+        self.listing.ends_at = timezone.now() - timedelta(minutes=1)
+        self.listing.save()
+        emailed_bidder = User.objects.create_user(
+            username='emailed', password='pass12345', email='emailed@example.com',
+        )
+        Bid.objects.create(listing=self.listing, bidder=emailed_bidder, amount='45.00')
+
+        with patch('timers.tasks.send_mail', side_effect=ValueError('Header values cannot contain newlines')):
+            result = close_auction(self.listing)
+
+        self.listing.refresh_from_db()
+        self.assertIsNotNone(result)
+        self.assertTrue(result.is_winner)
+        self.assertEqual(self.listing.status, Listing.STATUS_CLOSED)
+
 
 class CloseExpiredAuctionsCommandTests(TestCase):
     def setUp(self):
@@ -165,3 +188,24 @@ class CloseExpiredAuctionsCommandTests(TestCase):
         self.assertFalse(expired.is_active)
         self.assertTrue(not_yet_expired.is_active)
         self.assertFalse(already_closed.is_active)
+
+    def test_command_keeps_processing_after_one_listing_raises(self):
+        from io import StringIO
+        from unittest.mock import patch
+
+        broken = self.make_listing(timezone.now() - timedelta(minutes=1))
+        healthy = self.make_listing(timezone.now() - timedelta(minutes=1))
+
+        def side_effect(listing):
+            if listing.pk == broken.pk:
+                raise RuntimeError('boom')
+            listing.is_active = False
+            listing.save(update_fields=['is_active'])
+
+        with patch('timers.management.commands.close_expired_auctions.close_auction', side_effect=side_effect):
+            call_command('close_expired_auctions', stderr=StringIO())
+
+        broken.refresh_from_db()
+        healthy.refresh_from_db()
+        self.assertTrue(broken.is_active)
+        self.assertFalse(healthy.is_active)

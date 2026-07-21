@@ -48,6 +48,11 @@ class Listing(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+        indexes = [
+            # Matches the query in close_expired_auctions, which is intended
+            # to run on a recurring schedule (e.g. every minute).
+            models.Index(fields=['is_active', 'ends_at'], name='listing_active_ends_idx'),
+        ]
 
     def __str__(self):
         return self.title

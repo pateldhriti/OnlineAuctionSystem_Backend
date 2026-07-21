@@ -2,6 +2,8 @@ from django import forms
 
 from .models import Listing
 
+MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024
+
 
 class ListingForm(forms.ModelForm):
     class Meta:
@@ -22,3 +24,9 @@ class ListingForm(forms.ModelForm):
         if starting_price <= 0:
             raise forms.ValidationError('Starting price must be greater than zero.')
         return starting_price
+
+    def clean_image(self):
+        image = self.cleaned_data.get('image')
+        if image and image.size > MAX_IMAGE_SIZE_BYTES:
+            raise forms.ValidationError('Image must be smaller than 5MB.')
+        return image

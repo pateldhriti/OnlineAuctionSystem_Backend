@@ -23,6 +23,11 @@ class Bid(models.Model):
         # Tie-break: among equal amounts, the earliest bid wins (first bidder
         # to reach that price), so ``highest_for`` can just take ``.first()``.
         ordering = ['-amount', 'created_at']
+        indexes = [
+            # Matches highest_for's filter+order, called on every bid-history
+            # page view and every auction close.
+            models.Index(fields=['listing', '-amount', 'created_at'], name='bid_listing_amount_idx'),
+        ]
 
     def __str__(self):
         return f'{self.bidder} bid {self.amount} on {self.listing}'

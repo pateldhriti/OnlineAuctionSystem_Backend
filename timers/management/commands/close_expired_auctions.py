@@ -18,6 +18,12 @@ class Command(BaseCommand):
         expired = Listing.objects.filter(is_active=True, ends_at__lte=timezone.now())
         count = 0
         for listing in expired:
-            close_auction(listing)
+            try:
+                close_auction(listing)
+            except Exception as exc:
+                # One bad listing shouldn't stop the rest of a scheduled run
+                # from closing.
+                self.stderr.write(self.style.ERROR(f'Failed to close listing {listing.pk}: {exc}'))
+                continue
             count += 1
         self.stdout.write(self.style.SUCCESS(f'Closed {count} expired auction(s).'))

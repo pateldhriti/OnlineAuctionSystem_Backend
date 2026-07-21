@@ -32,7 +32,10 @@
                             <span class="navbar-text me-3">Signed in as <strong>{{ user.username }}</strong></span>
                         </li>
                         <li class="nav-item">
-                            <a class="btn btn-outline-light btn-sm mt-1" href="{% url 'accounts:logout' %}">Logout</a>
+                            <form method="post" action="{% url 'accounts:logout' %}" class="mt-1">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
+                            </form>
                         </li>
                     {% else %}
                         <li class="nav-item">

@@ -11,20 +11,30 @@ from bids.models import Bid
 
 
 def notify_winner(listing, winning_bid):
-    """Email the winning bidder that they won ``listing``."""
+    """Email the winning bidder that they won ``listing``.
+
+    Never raises: a listing title crafted to break header encoding (or any
+    other mail-sending failure) must not stop the caller from finishing the
+    rest of a batch close. ``fail_silently=True`` covers most backends, but
+    header-validation errors from some backends (e.g. smtp) can surface
+    before that guard applies, so this also catches explicitly.
+    """
     if not winning_bid.bidder.email:
         return
-    send_mail(
-        subject=f'You won the auction for "{listing.title}"!',
-        message=(
-            f'Congratulations, {winning_bid.bidder.username}!\n\n'
-            f'Your bid of {winning_bid.amount} won the auction for '
-            f'"{listing.title}".'
-        ),
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[winning_bid.bidder.email],
-        fail_silently=True,
-    )
+    try:
+        send_mail(
+            subject=f'You won the auction for "{listing.title}"!',
+            message=(
+                f'Congratulations, {winning_bid.bidder.username}!\n\n'
+                f'Your bid of {winning_bid.amount} won the auction for '
+                f'"{listing.title}".'
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[winning_bid.bidder.email],
+            fail_silently=True,
+        )
+    except Exception:
+        pass
 
 
 def close_auction(listing):

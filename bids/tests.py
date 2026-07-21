@@ -171,6 +171,20 @@ class BidHistoryViewTests(TestCase):
         bids = list(response.context['bids'])
         self.assertEqual([bid.amount for bid in bids], [Decimal('45.00'), Decimal('30.00')])
 
+    def test_history_page_paginates_bids(self):
+        from bids.views import BIDS_PAGE_SIZE
+
+        for i in range(BIDS_PAGE_SIZE + 1):
+            bidder = User.objects.create_user(username=f'bidder-{i}', password='pass12345')
+            Bid.objects.create(listing=self.listing, bidder=bidder, amount=str(10 + i))
+
+        first_page = self.client.get(reverse('bids:history', args=[self.listing.pk]))
+        second_page = self.client.get(reverse('bids:history', args=[self.listing.pk]), {'page': 2})
+
+        self.assertEqual(len(first_page.context['page_obj']), BIDS_PAGE_SIZE)
+        self.assertEqual(len(second_page.context['page_obj']), 1)
+        self.assertContains(first_page, 'Page 1 of 2')
+
     def test_history_page_shows_starting_price_with_no_bids(self):
         response = self.client.get(reverse('bids:history', args=[self.listing.pk]))
 

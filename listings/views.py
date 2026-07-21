@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from django.db.models import Max
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -25,30 +26,32 @@ def get_safe_redirect_url(request, fallback_url):
     return fallback_url
 
 
+LISTINGS_PAGE_SIZE = 12
+
+
 def listing_list(request):
     active_category = request.GET.get('category', '')
     listings = Listing.objects.select_related('seller').annotate(
         highest_bid_amount=Max('bids__amount'),
-    )
+    ).order_by('-created_at')
     category_values = dict(Listing.Category.choices)
-    watched_listing_ids = set()
 
     if active_category in category_values:
         listings = listings.filter(category=active_category)
     else:
         active_category = ''
 
-    if request.user.is_authenticated:
-        watched_listing_ids = set(request.user.watchlist.values_list('pk', flat=True))
+    paginator = Paginator(listings, LISTINGS_PAGE_SIZE)
+    page_obj = paginator.get_page(request.GET.get('page'))
 
     return render(
         request,
         'listings/listing_list.html',
         {
-            'listings': listings,
+            'listings': page_obj,
+            'page_obj': page_obj,
             'categories': Listing.Category.choices,
             'active_category': active_category,
-            'watched_listing_ids': watched_listing_ids,
         },
     )
 
@@ -103,10 +106,7 @@ def _listing_payload(listing, is_watched, bid_state):
 
 
 def listing_detail(request, pk):
-    listing = get_object_or_404(
-        Listing.objects.select_related('seller').prefetch_related('watchers'),
-        pk=pk,
-    )
+    listing = get_object_or_404(Listing.objects.select_related('seller'), pk=pk)
     is_watched = (
         request.user.is_authenticated
         and listing.watchers.filter(pk=request.user.pk).exists()

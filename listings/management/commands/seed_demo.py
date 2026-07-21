@@ -1,7 +1,8 @@
 from datetime import timedelta
 
+from django.conf import settings
 from django.contrib.auth.models import User
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 
 from bids.models import Bid
@@ -20,6 +21,13 @@ class Command(BaseCommand):
     )
 
     def handle(self, *args, **options):
+        if not settings.DEBUG:
+            raise CommandError(
+                'seed_demo creates an admin/superuser account with a known, '
+                'hardcoded password (%s) - refusing to run with DEBUG=False.'
+                % DEMO_PASSWORD
+            )
+
         admin_user, admin_created = User.objects.get_or_create(
             username='admin',
             defaults={'email': 'admin@example.com', 'is_staff': True, 'is_superuser': True},

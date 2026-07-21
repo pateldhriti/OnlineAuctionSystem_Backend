@@ -4,6 +4,7 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.views.decorators.http import require_POST
 
 from .forms import RegisterForm, LoginForm, UserUpdateForm, ProfileForm
 from .models import UserProfile
@@ -51,6 +52,7 @@ def login_view(request):
     return render(request, 'accounts/login.html', {'form': form, 'next': next_url})
 
 
+@require_POST
 def logout_view(request):
     logout(request)
     return redirect('accounts:login')
@@ -106,7 +108,6 @@ def password_change_view(request):
 @login_required
 def seller_dashboard_view(request):
     from listings.models import Listing
-    from bids.models import Bid
 
     listings = (
         Listing.objects
@@ -117,11 +118,16 @@ def seller_dashboard_view(request):
 
     dashboard_data = []
     for listing in listings:
-        highest_bid = Bid.highest_for(listing)
+        # `listing.bids.all()` reuses the prefetch cache above (it's already
+        # ordered per Bid.Meta.ordering); calling Bid.highest_for/
+        # current_price_for here would issue two fresh, uncached queries per
+        # listing instead.
+        bids = list(listing.bids.all())
+        highest_bid = bids[0] if bids else None
         dashboard_data.append({
             'listing': listing,
-            'current_price': Bid.current_price_for(listing),
-            'bid_count': listing.bids.count(),
+            'current_price': highest_bid.amount if highest_bid else listing.starting_price,
+            'bid_count': len(bids),
             'winner': highest_bid.bidder if listing.has_ended and highest_bid else None,
         })
 

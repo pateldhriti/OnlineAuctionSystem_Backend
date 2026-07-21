@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
@@ -126,10 +128,19 @@ class LogoutViewTests(TestCase):
         user = User.objects.create_user(username='bidder', password='pass12345')
         self.client.force_login(user)
 
-        response = self.client.get(reverse('accounts:logout'))
+        response = self.client.post(reverse('accounts:logout'))
 
         self.assertRedirects(response, reverse('accounts:login'))
         self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_logout_rejects_get_to_prevent_link_based_logout(self):
+        user = User.objects.create_user(username='bidder', password='pass12345')
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('accounts:logout'))
+
+        self.assertEqual(response.status_code, 405)
+        self.assertIn('_auth_user_id', self.client.session)
 
 
 class ProfileViewTests(TestCase):
@@ -298,3 +309,50 @@ class RecentlyViewedUtilsTests(TestCase):
             get_recently_viewed_ids(self.client),
             [self.listings[0].pk],
         )
+
+
+class SellerDashboardViewTests(TestCase):
+    def setUp(self):
+        from bids.models import Bid
+
+        self.Bid = Bid
+        self.seller = User.objects.create_user(username='seller', password='pass12345')
+        self.bidder = User.objects.create_user(username='bidder', password='pass12345')
+
+    def test_dashboard_shows_current_price_and_bid_count(self):
+        listing = Listing.objects.create(
+            seller=self.seller,
+            title='Vintage Clock',
+            description='A small table clock.',
+            starting_price='25.00',
+        )
+        self.Bid.objects.create(listing=listing, bidder=self.bidder, amount='30.00')
+        other_bidder = User.objects.create_user(username='bidder2', password='pass12345')
+        self.Bid.objects.create(listing=listing, bidder=other_bidder, amount='45.00')
+        self.client.force_login(self.seller)
+
+        response = self.client.get(reverse('accounts:dashboard'))
+
+        self.assertEqual(response.status_code, 200)
+        row = response.context['dashboard_data'][0]
+        self.assertEqual(row['current_price'], Decimal('45.00'))
+        self.assertEqual(row['bid_count'], 2)
+
+    def test_dashboard_query_count_does_not_scale_with_listings_or_bids(self):
+        for i in range(5):
+            listing = Listing.objects.create(
+                seller=self.seller,
+                title=f'Listing {i}',
+                description='Description.',
+                starting_price='10.00',
+            )
+            for j in range(3):
+                bidder = User.objects.create_user(username=f'bidder-{i}-{j}', password='pass12345')
+                self.Bid.objects.create(listing=listing, bidder=bidder, amount=str(20 + j))
+        self.client.force_login(self.seller)
+
+        with self.assertNumQueries(5):
+            response = self.client.get(reverse('accounts:dashboard'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['dashboard_data']), 5)

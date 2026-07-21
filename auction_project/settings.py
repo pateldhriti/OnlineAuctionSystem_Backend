@@ -20,22 +20,32 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-# Set the DJANGO_SECRET_KEY env var in any real deployment; this default is
-# only for local development.
-SECRET_KEY = os.environ.get(
-    'DJANGO_SECRET_KEY',
-    'django-insecure-+$)&poshzuj3tz*@#5h6&lbw*hj3s)u*95znq!_x2t#w$&f(wc',
-)
-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
+
+_DEV_ONLY_SECRET_KEY = 'django-insecure-+$)&poshzuj3tz*@#5h6&lbw*hj3s)u*95znq!_x2t#w$&f(wc'
+
+# SECURITY WARNING: keep the secret key used in production secret!
+# Set the DJANGO_SECRET_KEY env var in any real deployment. Outside of DEBUG,
+# refuse to silently fall back to the well-known dev key committed above.
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', _DEV_ONLY_SECRET_KEY if DEBUG else '')
+if not SECRET_KEY:
+    raise RuntimeError('DJANGO_SECRET_KEY must be set when DJANGO_DEBUG is not True.')
 
 ALLOWED_HOSTS = [
     host.strip()
     for host in os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',')
     if host.strip()
 ]
+
+# Outside of local dev, cookies should only ever be sent over HTTPS, and
+# HSTS should be enabled once a real deployment is behind TLS.
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+SECURE_SSL_REDIRECT = not DEBUG
+SECURE_HSTS_SECONDS = 0 if DEBUG else 60 * 60 * 24 * 30
+SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
+SECURE_HSTS_PRELOAD = not DEBUG
 
 
 # Application definition
