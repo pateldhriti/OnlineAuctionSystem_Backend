@@ -9,6 +9,8 @@ from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils import timezone
 
+from bids.models import Bid
+
 from .models import DEFAULT_AUCTION_DURATION, Listing
 
 
@@ -105,6 +107,15 @@ class ListingViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Vintage Clock')
 
+    def test_list_view_shows_highest_bid_when_present(self):
+        listing = self.make_listing()
+        Bid.objects.create(listing=listing, bidder=self.buyer, amount='40.00')
+
+        response = self.client.get(reverse('listings:list'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Highest bid: $40.00')
+
     def test_list_view_filters_by_category(self):
         self.make_listing(title='Vintage Clock', category=Listing.Category.HOME)
         self.make_listing(title='Bluetooth Speaker', category=Listing.Category.ELECTRONICS)
@@ -128,6 +139,26 @@ class ListingViewTests(TestCase):
         self.assertEqual(data['title'], 'Vintage Clock')
         self.assertEqual(data['category'], Listing.Category.HOME)
         self.assertEqual(data['category_display'], 'Home')
+        self.assertEqual(data['current_price'], '25.00')
+        self.assertEqual(data['bid_count'], 0)
+        self.assertIsNotNone(data['ends_at'])
+
+    def test_detail_page_shows_live_bid_and_countdown_hooks(self):
+        listing = self.make_listing()
+        Bid.objects.create(listing=listing, bidder=self.buyer, amount='45.00')
+
+        response = self.client.get(
+            reverse('listings:detail', args=[listing.pk]),
+            HTTP_ACCEPT='text/html',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'listings/listing_detail.html')
+        self.assertContains(response, 'Current highest bid')
+        self.assertContains(response, '$45.00')
+        self.assertContains(response, 'buyer')
+        self.assertContains(response, 'data-current-price')
+        self.assertContains(response, 'data-ends-at')
 
     def test_logged_in_user_can_create_listing(self):
         self.client.force_login(self.user)
