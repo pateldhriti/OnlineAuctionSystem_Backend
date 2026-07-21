@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from django.contrib.auth.models import User
+from django.core import mail
 from django.core.management import call_command
 from django.test import TestCase
 from django.utils import timezone
@@ -52,8 +53,10 @@ class CloseAuctionTests(TestCase):
         result = close_auction(self.listing)
 
         self.listing.refresh_from_db()
+        winning_bid.refresh_from_db()
         self.assertEqual(result, winning_bid)
         self.assertFalse(self.listing.is_active)
+        self.assertTrue(winning_bid.is_winner)
 
     def test_close_auction_is_noop_when_already_inactive(self):
         self.listing.ends_at = timezone.now() - timedelta(minutes=1)
@@ -63,6 +66,31 @@ class CloseAuctionTests(TestCase):
         result = close_auction(self.listing)
 
         self.assertIsNone(result)
+
+    def test_close_auction_emails_the_winner(self):
+        self.listing.ends_at = timezone.now() - timedelta(minutes=1)
+        self.listing.save()
+        top_bidder = User.objects.create_user(
+            username='top', password='pass12345', email='top@example.com',
+        )
+        winning_bid = Bid.objects.create(listing=self.listing, bidder=top_bidder, amount='45.00')
+
+        close_auction(self.listing)
+
+        self.assertEqual(len(mail.outbox), 1)
+        sent = mail.outbox[0]
+        self.assertIn(self.listing.title, sent.subject)
+        self.assertEqual(sent.to, [top_bidder.email])
+        self.assertIn(str(winning_bid.amount), sent.body)
+
+    def test_close_auction_skips_email_when_winner_has_no_address(self):
+        self.listing.ends_at = timezone.now() - timedelta(minutes=1)
+        self.listing.save()
+        Bid.objects.create(listing=self.listing, bidder=self.bidder, amount='45.00')
+
+        close_auction(self.listing)
+
+        self.assertEqual(len(mail.outbox), 0)
 
 
 class CloseExpiredAuctionsCommandTests(TestCase):
