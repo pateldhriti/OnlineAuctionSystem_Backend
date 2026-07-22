@@ -13,8 +13,10 @@
             <div class="card border-0 p-4" style="border-radius:20px;">
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     <h2 class="fw-800 mb-0" style="font-weight:800;">{{ listing.title }}</h2>
-                    {% if listing.is_active %}
+                    {% if listing.status == 'active' %}
                         <span class="badge badge-glow-success px-3 py-2">Active</span>
+                    {% elif listing.status == 'ended' %}
+                        <span class="badge badge-glow-warning px-3 py-2">Ended</span>
                     {% else %}
                         <span class="badge bg-secondary px-3 py-2">Closed</span>
                     {% endif %}

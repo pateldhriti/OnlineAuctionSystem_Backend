@@ -153,6 +153,21 @@ class ListingViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, '$40.00')
 
+    def test_list_view_shows_ended_badge_for_unprocessed_expired_listing(self):
+        """A listing whose deadline has passed but hasn't been picked up by
+        close_auction yet must not show a stale "Active" badge - that
+        previously contradicted the "Auction closed" countdown text shown
+        for the same listing.
+        """
+        listing = self.make_listing()
+        listing.ends_at = timezone.now() - timedelta(minutes=1)
+        listing.save()
+
+        response = self.client.get(reverse('listings:list'))
+
+        self.assertContains(response, 'badge-glow-warning">Ended')
+        self.assertNotContains(response, 'badge-glow-success">Active')
+
     def test_list_view_paginates_listings(self):
         from listings.views import LISTINGS_PAGE_SIZE
 

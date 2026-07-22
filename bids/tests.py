@@ -171,6 +171,15 @@ class BidHistoryViewTests(TestCase):
         bids = list(response.context['bids'])
         self.assertEqual([bid.amount for bid in bids], [Decimal('45.00'), Decimal('30.00')])
 
+    def test_history_page_shows_ended_badge_for_unprocessed_expired_listing(self):
+        self.listing.ends_at = timezone.now() - timedelta(minutes=1)
+        self.listing.save()
+
+        response = self.client.get(reverse('bids:history', args=[self.listing.pk]))
+
+        self.assertContains(response, 'badge-glow-warning px-3 py-2">Ended')
+        self.assertNotContains(response, 'badge-glow-success px-3 py-2">Active')
+
     def test_history_page_paginates_bids(self):
         from bids.views import BIDS_PAGE_SIZE
 

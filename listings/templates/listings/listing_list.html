@@ -53,8 +53,10 @@
                             <div class="placeholder-icon"><i class="bi bi-box-seam"></i></div>
                         {% endif %}
                         <div class="status-badge">
-                            {% if listing.is_active %}
+                            {% if listing.status == 'active' %}
                                 <span class="badge badge-glow-success">Active</span>
+                            {% elif listing.status == 'ended' %}
+                                <span class="badge badge-glow-warning">Ended</span>
                             {% else %}
                                 <span class="badge bg-secondary">Closed</span>
                             {% endif %}
