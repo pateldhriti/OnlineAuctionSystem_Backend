@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'bids',
     'timers',
     'conversations',
+    'pages',
 ]
 
 MIDDLEWARE = [
@@ -167,5 +168,6 @@ LOGOUT_REDIRECT_URL = '/accounts/login/'
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'noreply@onlineauctionsystem.example'
+CONTACT_EMAIL = os.environ.get('DJANGO_CONTACT_EMAIL', 'support@onlineauctionsystem.example')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
