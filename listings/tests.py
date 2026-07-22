@@ -282,6 +282,70 @@ class ListingViewTests(TestCase):
         self.assertEqual(listing.category, Listing.Category.HOME)
         self.assertTrue(listing.image.name.startswith('listing_images/'))
 
+    def test_create_listing_form_shows_expiry_time_input(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('listings:create'))
+
+        self.assertContains(response, 'type="datetime-local"')
+        self.assertContains(response, 'Bidding expiry time')
+
+    def test_logged_in_user_can_set_custom_expiry_time(self):
+        self.client.force_login(self.user)
+        custom_ends_at = timezone.now() + timedelta(days=2)
+
+        self.client.post(
+            reverse('listings:create'),
+            {
+                'title': 'Desk Lamp',
+                'description': 'Adjustable lamp.',
+                'category': Listing.Category.HOME,
+                'starting_price': '15.50',
+                'ends_at': custom_ends_at.strftime('%Y-%m-%dT%H:%M'),
+            },
+        )
+
+        listing = Listing.objects.get(title='Desk Lamp')
+        self.assertEqual(listing.ends_at.replace(second=0, microsecond=0), custom_ends_at.replace(second=0, microsecond=0))
+
+    def test_create_listing_rejects_expiry_time_in_the_past(self):
+        self.client.force_login(self.user)
+        past_ends_at = timezone.now() - timedelta(days=1)
+
+        response = self.client.post(
+            reverse('listings:create'),
+            {
+                'title': 'Desk Lamp',
+                'description': 'Adjustable lamp.',
+                'category': Listing.Category.HOME,
+                'starting_price': '15.50',
+                'ends_at': past_ends_at.strftime('%Y-%m-%dT%H:%M'),
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Bidding expiry time must be in the future.')
+        self.assertFalse(Listing.objects.filter(title='Desk Lamp').exists())
+
+    def test_owner_can_update_expiry_time(self):
+        listing = self.make_listing()
+        self.client.force_login(self.user)
+        new_ends_at = timezone.now() + timedelta(days=10)
+
+        self.client.post(
+            reverse('listings:update', args=[listing.pk]),
+            {
+                'title': listing.title,
+                'description': listing.description,
+                'category': listing.category,
+                'starting_price': listing.starting_price,
+                'ends_at': new_ends_at.strftime('%Y-%m-%dT%H:%M'),
+            },
+        )
+
+        listing.refresh_from_db()
+        self.assertEqual(listing.ends_at.replace(second=0, microsecond=0), new_ends_at.replace(second=0, microsecond=0))
+
     def test_create_listing_form_accepts_multipart_encoding(self):
         """The rendered form must be able to actually submit the image field.
 
