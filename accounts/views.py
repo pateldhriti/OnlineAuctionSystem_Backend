@@ -215,6 +215,7 @@ def password_change_view(request):
 
 @login_required
 def seller_dashboard_view(request):
+    from conversations.models import Conversation
     from listings.models import Listing
 
     listings = (
@@ -228,11 +229,28 @@ def seller_dashboard_view(request):
     for listing in listings:
         bids = list(listing.bids.all())
         highest_bid = bids[0] if bids else None
+        winner_user = highest_bid.bidder if listing.has_ended and highest_bid else None
+        winner_contact = None
+        if winner_user and not listing.is_active:
+            winner_profile = getattr(winner_user, 'profile', None)
+            winner_contact = {
+                'name': winner_user.get_full_name() or winner_user.username,
+                'email': winner_user.email,
+                'phone': winner_profile.phone if winner_profile else '',
+            }
+        conversation_id = None
+        if winner_user and not listing.is_active:
+            conv = Conversation.objects.filter(listing=listing, bidder=winner_user).first()
+            if not conv:
+                conv = Conversation.objects.create(listing=listing, bidder=winner_user)
+            conversation_id = conv.pk
         dashboard_data.append({
             'listing': listing,
             'current_price': highest_bid.amount if highest_bid else listing.starting_price,
             'bid_count': len(bids),
-            'winner': highest_bid.bidder if listing.has_ended and highest_bid else None,
+            'winner': winner_user,
+            'winner_contact': winner_contact,
+            'conversation_id': conversation_id,
         })
 
     active_count = sum(1 for d in dashboard_data if d['listing'].is_active and not d['listing'].has_ended)
