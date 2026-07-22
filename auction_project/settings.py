@@ -108,6 +108,10 @@ DATABASES = {
     }
 }
 
+# Initial data lives in fixtures/initial_data.json (JSON), loaded with:
+#   python manage.py loaddata initial_data
+FIXTURE_DIRS = [BASE_DIR / 'fixtures']
+
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators

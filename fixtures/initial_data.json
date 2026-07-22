@@ -1,0 +1,209 @@
+[
+{
+  "model": "auth.user",
+  "pk": 1,
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$oNo1MPFMaXU9FWKlkdYd2j$e7SNQrEWmXQFKkDkIalm1VlI8ZEJMBzyAPPhpTaA1Jo=",
+    "last_login": null,
+    "is_superuser": true,
+    "username": "admin",
+    "first_name": "",
+    "last_name": "",
+    "email": "admin@example.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-07-22T03:44:07.276Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "pk": 2,
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$0pBCiSED3LqNtDYCQBZnWD$yq41LYSq4rk0ZNgICK+lxxz1wxNy5dYTRBPinxQ5QrU=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "seller1",
+    "first_name": "",
+    "last_name": "",
+    "email": "seller1@example.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-07-22T03:44:08.104Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "pk": 3,
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$eLt0mMMGfkuEesUi6T2v45$ecX/qf8EuxE8X9ZvK54SbNbKQZzvTmGwT556Ssee/TM=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "alice",
+    "first_name": "",
+    "last_name": "",
+    "email": "alice@example.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-07-22T03:44:08.907Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "pk": 4,
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$yLCxmK7lGI8dtongBFJKq6$ifVEZDIiQKDQJEmYfCAeT1hLcLkQ8J3QEoTvXw6zcz8=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "bob",
+    "first_name": "",
+    "last_name": "",
+    "email": "bob@example.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-07-22T03:44:10.410Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "listings.listing",
+  "pk": 1,
+  "fields": {
+    "seller": 2,
+    "title": "Vintage Camera",
+    "description": "A classic 35mm film camera in great condition.",
+    "category": "electronics",
+    "starting_price": "50.00",
+    "image": "",
+    "is_active": true,
+    "ends_at": "2026-07-25T03:44:12.129Z",
+    "created_at": "2026-07-22T03:44:12.118Z",
+    "updated_at": "2026-07-22T03:44:12.119Z",
+    "watchers": []
+  }
+},
+{
+  "model": "listings.listing",
+  "pk": 2,
+  "fields": {
+    "seller": 2,
+    "title": "Mountain Bike",
+    "description": "Lightly used mountain bike, 21-speed.",
+    "category": "sports",
+    "starting_price": "120.00",
+    "image": "",
+    "is_active": true,
+    "ends_at": "2026-07-22T09:44:12.148Z",
+    "created_at": "2026-07-22T03:44:12.140Z",
+    "updated_at": "2026-07-22T03:44:12.140Z",
+    "watchers": []
+  }
+},
+{
+  "model": "listings.listing",
+  "pk": 3,
+  "fields": {
+    "seller": 2,
+    "title": "Antique Wall Clock",
+    "description": "Hand-wound wall clock from the 1950s.",
+    "category": "home",
+    "starting_price": "75.00",
+    "image": "",
+    "is_active": false,
+    "ends_at": "2026-07-22T03:43:12.164Z",
+    "created_at": "2026-07-22T03:44:12.157Z",
+    "updated_at": "2026-07-22T03:44:12.157Z",
+    "watchers": []
+  }
+},
+{
+  "model": "bids.bid",
+  "pk": 1,
+  "fields": {
+    "listing": 1,
+    "bidder": 3,
+    "amount": "60.00",
+    "is_winner": false,
+    "created_at": "2026-07-22T03:44:12.175Z"
+  }
+},
+{
+  "model": "bids.bid",
+  "pk": 2,
+  "fields": {
+    "listing": 2,
+    "bidder": 4,
+    "amount": "135.00",
+    "is_winner": false,
+    "created_at": "2026-07-22T03:44:12.186Z"
+  }
+},
+{
+  "model": "bids.bid",
+  "pk": 3,
+  "fields": {
+    "listing": 2,
+    "bidder": 3,
+    "amount": "150.00",
+    "is_winner": false,
+    "created_at": "2026-07-22T03:44:12.198Z"
+  }
+},
+{
+  "model": "bids.bid",
+  "pk": 4,
+  "fields": {
+    "listing": 3,
+    "bidder": 3,
+    "amount": "90.00",
+    "is_winner": false,
+    "created_at": "2026-07-22T03:44:12.206Z"
+  }
+},
+{
+  "model": "bids.bid",
+  "pk": 5,
+  "fields": {
+    "listing": 3,
+    "bidder": 4,
+    "amount": "110.00",
+    "is_winner": true,
+    "created_at": "2026-07-22T03:44:12.216Z"
+  }
+},
+{
+  "model": "conversations.conversation",
+  "pk": 1,
+  "fields": {
+    "listing": 1,
+    "bidder": 3,
+    "created_at": "2026-07-22T03:44:29.042Z"
+  }
+},
+{
+  "model": "conversations.message",
+  "pk": 1,
+  "fields": {
+    "conversation": 1,
+    "sender": 3,
+    "body": "Hi! Is the camera in fully working condition?",
+    "created_at": "2026-07-22T03:44:29.051Z"
+  }
+},
+{
+  "model": "conversations.message",
+  "pk": 2,
+  "fields": {
+    "conversation": 1,
+    "sender": 2,
+    "body": "Yes, tested it last week - works great!",
+    "created_at": "2026-07-22T03:44:29.059Z"
+  }
+}
+]
