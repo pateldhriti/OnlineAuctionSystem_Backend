@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Bid
+from .models import AutoBid, Bid
 
 
 class BidForm(forms.ModelForm):
@@ -51,3 +51,54 @@ class BidForm(forms.ModelForm):
         if commit:
             bid.save()
         return bid
+
+
+class AutoBidForm(forms.ModelForm):
+    class Meta:
+        model = AutoBid
+        fields = ['max_amount']
+        widgets = {
+            'max_amount': forms.NumberInput(attrs={'step': '0.01', 'min': '0', 'placeholder': 'Maximum auto-bid amount'}),
+        }
+        labels = {
+            'max_amount': 'Max auto-bid amount ($)',
+        }
+
+    def __init__(self, *args, listing=None, bidder=None, **kwargs):
+        self.listing = listing
+        self.bidder = bidder
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs['class'] = 'form-control'
+
+    def clean_max_amount(self):
+        amount = self.cleaned_data['max_amount']
+        if amount <= 0:
+            raise forms.ValidationError('Auto-bid amount must be greater than zero.')
+        current = Bid.current_price_for(self.listing)
+        if amount <= current:
+            raise forms.ValidationError(
+                f'Auto-bid must be higher than the current price of ${current}.',
+            )
+        return amount
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if self.listing is None:
+            return cleaned_data
+        if not self.listing.is_active or self.listing.has_ended:
+            raise forms.ValidationError('This listing is no longer accepting bids.')
+        if self.bidder and self.listing.seller_id == self.bidder.pk:
+            raise forms.ValidationError('You cannot auto-bid on your own listing.')
+        return cleaned_data
+
+    def save(self, commit=True):
+        ab, created = AutoBid.objects.update_or_create(
+            listing=self.listing,
+            bidder=self.bidder,
+            defaults={
+                'max_amount': self.cleaned_data['max_amount'],
+                'is_active': True,
+            },
+        )
+        return ab
