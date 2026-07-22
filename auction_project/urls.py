@@ -15,6 +15,7 @@ urlpatterns = [
     path('listings/', include('listings.urls')),
     path('bids/', include('bids.urls')),
     path('timers/', include('timers.urls')),
+    path('messages/', include('conversations.urls')),
 ]
 
 if settings.DEBUG:

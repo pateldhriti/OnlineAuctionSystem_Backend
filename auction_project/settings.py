@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'listings',
     'bids',
     'timers',
+    'conversations',
 ]
 
 MIDDLEWARE = [
