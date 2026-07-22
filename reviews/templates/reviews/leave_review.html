@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}Leave a Review — AuctionHub{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-3">
+    <div class="col-md-6">
+        <div class="text-center mb-4">
+            <div class="d-inline-flex align-items-center justify-content-center mb-3" style="width:64px;height:64px;border-radius:18px;background:var(--warning-gradient);color:#fff;font-size:1.6rem;">
+                <i class="bi bi-star-fill"></i>
+            </div>
+            <h2 class="fw-800" style="font-weight:800;">
+                {% if is_winner %}Review Seller{% else %}Review Buyer{% endif %}
+            </h2>
+            <p class="text-body-secondary">
+                Share your experience with <strong>{{ reviewee.username }}</strong>
+            </p>
+        </div>
+        <div class="card border-0" style="border-radius:20px;">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center gap-3 mb-4 p-3 rounded-3" style="background:#f8f9fa;">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:44px;height:44px;background:var(--primary-gradient);color:#fff;font-weight:700;">
+                        {{ reviewee.username|first|upper }}
+                    </div>
+                    <div>
+                        <span class="fw-bold">{{ reviewee.username }}</span>
+                        <div class="small">
+                            <a href="{% url 'listings:detail' listing.pk %}" class="text-decoration-none" style="color:var(--primary);">{{ listing.title }}</a>
+                        </div>
+                    </div>
+                </div>
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger border-0" style="border-radius:10px;">{{ form.non_field_errors }}</div>
+                    {% endif %}
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold small">Rating</label>
+                        {% if form.rating.errors %}
+                            <div class="text-danger small mb-1">{{ form.rating.errors|striptags }}</div>
+                        {% endif %}
+                        <div class="d-flex gap-2 fs-2" id="star-rating">
+                            {% for radio in form.rating %}
+                                <div class="form-check d-none">{{ radio }}</div>
+                            {% endfor %}
+                            {% for i in "12345" %}
+                                <span class="star-btn" data-value="{{ i }}" style="cursor:pointer;color:#e2e8f0;transition:all .2s ease;" role="button">
+                                    <i class="bi bi-star-fill"></i>
+                                </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold small" for="{{ form.comment.id_for_label }}">Comment (optional)</label>
+                        {{ form.comment }}
+                        {% if form.comment.errors %}
+                            <div class="text-danger small mt-1">{{ form.comment.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-glow-warning flex-fill py-2">
+                            <i class="bi bi-star-fill me-1"></i> Submit Review
+                        </button>
+                        <a href="{% url 'accounts:my_bids' %}?tab=won" class="btn btn-outline-secondary flex-fill py-2" style="border-radius:10px;">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const stars = document.querySelectorAll('.star-btn');
+    const radios = document.querySelectorAll('#star-rating input[type="radio"]');
+    function highlight(n) {
+        stars.forEach(function(s) {
+            const v = parseInt(s.dataset.value);
+            s.style.color = v <= n ? '#F2994A' : '#e2e8f0';
+            s.style.transform = v <= n ? 'scale(1.15)' : 'scale(1)';
+        });
+    }
+    stars.forEach(function(star) {
+        star.addEventListener('click', function() {
+            const val = this.dataset.value;
+            radios.forEach(function(r) { r.checked = r.value === val; });
+            highlight(parseInt(val));
+        });
+        star.addEventListener('mouseenter', function() { highlight(parseInt(this.dataset.value)); });
+    });
+    document.getElementById('star-rating').addEventListener('mouseleave', function() {
+        const checked = document.querySelector('#star-rating input[type="radio"]:checked');
+        highlight(checked ? parseInt(checked.value) : 0);
+    });
+    const checked = document.querySelector('#star-rating input[type="radio"]:checked');
+    if (checked) highlight(parseInt(checked.value));
+});
+</script>
+{% endblock %}

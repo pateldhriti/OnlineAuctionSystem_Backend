@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}Reviews for {{ reviewed_user.username }} — AuctionHub{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card border-0 overflow-hidden" style="border-radius:20px;">
+            <div class="p-4 text-center" style="background:var(--primary-gradient);">
+                <div class="rounded-circle d-inline-flex align-items-center justify-content-center mx-auto mb-3" style="width:80px;height:80px;background:rgba(255,255,255,.2);color:#fff;font-size:2rem;font-weight:800;border:3px solid rgba(255,255,255,.3);">
+                    {{ reviewed_user.first_name|first|upper|default:"?" }}{{ reviewed_user.last_name|first|upper }}
+                </div>
+                <h4 class="fw-bold text-white mb-0">{{ reviewed_user.get_full_name|default:reviewed_user.username }}</h4>
+                <p class="mb-0" style="color:rgba(255,255,255,.7);">@{{ reviewed_user.username }}</p>
+            </div>
+            <div class="card-body p-4 text-center">
+                {% if avg_rating %}
+                    <div class="fs-3 mb-2">
+                        {% for i in "12345" %}
+                            {% if forloop.counter <= avg_rating %}
+                                <i class="bi bi-star-fill" style="color:var(--warning);"></i>
+                            {% else %}
+                                <i class="bi bi-star" style="color:#e2e8f0;"></i>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <p class="fw-bold mb-0" style="color:var(--warning);font-size:1.1rem;">
+                        {{ avg_rating|floatformat:1 }} / 5.0
+                    </p>
+                    <p class="text-body-secondary small">{{ review_count }} review{{ review_count|pluralize }}</p>
+                {% else %}
+                    <i class="bi bi-star" style="font-size:2rem;color:#e2e8f0;"></i>
+                    <p class="text-body-secondary small mt-2 mb-0">No reviews yet</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <h4 class="fw-bold mb-3">Reviews ({{ review_count }})</h4>
+        <div class="d-flex flex-column gap-3">
+            {% for review in reviews %}
+                <div class="card border-0 fade-up" style="border-radius:16px;">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:36px;height:36px;background:var(--primary-gradient);color:#fff;font-size:.8rem;font-weight:700;">
+                                    {{ review.reviewer.username|first|upper }}
+                                </div>
+                                <div>
+                                    <span class="fw-bold">{{ review.reviewer.username }}</span>
+                                    <div class="text-body-secondary" style="font-size:.75rem;">{{ review.created_at|date:"M d, Y" }}</div>
+                                </div>
+                            </div>
+                            <div>
+                                {% for i in "12345" %}
+                                    {% if forloop.counter <= review.rating %}
+                                        <i class="bi bi-star-fill" style="color:var(--warning);font-size:.85rem;"></i>
+                                    {% else %}
+                                        <i class="bi bi-star" style="color:#e2e8f0;font-size:.85rem;"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <p class="text-body-secondary small mb-1">
+                            Re: <a href="{% url 'listings:detail' review.listing.pk %}" class="text-decoration-none" style="color:var(--primary);">{{ review.listing.title }}</a>
+                        </p>
+                        {% if review.comment %}
+                            <p class="mb-0 mt-2" style="line-height:1.6;">{{ review.comment }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            {% empty %}
+                <div class="card border-0 empty-state" style="border-radius:20px;">
+                    <i class="bi bi-chat-square-text"></i>
+                    <h5 class="fw-bold">No reviews yet</h5>
+                    <p class="text-body-secondary">Reviews will appear here after transactions.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
