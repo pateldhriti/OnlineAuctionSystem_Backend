@@ -1,37 +1,306 @@
 {% extends 'base.html' %}
 
-{% block title %}Create Listing{% endblock %}
+{% block title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Listing — AuctionHub{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+<style>
+    .image-upload-area {
+        border: 2px dashed rgba(108,92,231,.25);
+        border-radius: 16px;
+        padding: 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all .3s ease;
+        background: rgba(108,92,231,.03);
+    }
+    .image-upload-area:hover {
+        border-color: var(--primary);
+        background: rgba(108,92,231,.06);
+    }
+    .image-upload-area.has-image {
+        border-style: solid;
+        border-color: var(--primary);
+        padding: 0;
+        overflow: hidden;
+    }
+    .crop-modal-backdrop {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,.7);
+        z-index: 1050;
+        backdrop-filter: blur(4px);
+    }
+    .crop-modal-backdrop.show { display: flex; align-items: center; justify-content: center; }
+    .crop-modal {
+        background: #fff;
+        border-radius: 20px;
+        max-width: 700px;
+        width: 95%;
+        max-height: 90vh;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0,0,0,.3);
+    }
+    .crop-modal-header {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .crop-modal-body {
+        padding: 1.5rem;
+        max-height: 60vh;
+        overflow: hidden;
+    }
+    .crop-modal-body img {
+        display: block;
+        max-width: 100%;
+    }
+    .crop-modal-footer {
+        padding: 1rem 1.5rem;
+        border-top: 1px solid #f0f0f0;
+        display: flex;
+        gap: .75rem;
+        justify-content: flex-end;
+    }
+    .thumb-preview-wrapper {
+        margin-top: 1rem;
+        display: none;
+    }
+    .thumb-preview-wrapper.show { display: block; }
+    .thumb-preview {
+        width: 100%;
+        max-width: 320px;
+        aspect-ratio: 16/9;
+        object-fit: cover;
+        border-radius: 12px;
+        border: 2px solid rgba(108,92,231,.15);
+    }
+    .ratio-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        padding: .35rem .75rem;
+        border-radius: 20px;
+        font-size: .75rem;
+        font-weight: 600;
+        background: rgba(108,92,231,.1);
+        color: var(--primary);
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-    <div class="row justify-content-center">
+    <div class="row justify-content-center py-3">
         <div class="col-lg-6 col-md-8">
-            <div class="card shadow-sm">
+            <div class="text-center mb-4">
+                <div class="d-inline-flex align-items-center justify-content-center mb-3" style="width:64px;height:64px;border-radius:18px;background:var(--primary-gradient);color:#fff;font-size:1.6rem;">
+                    <i class="bi bi-{% if form.instance.pk %}pencil-square{% else %}plus-circle{% endif %}"></i>
+                </div>
+                <h2 class="fw-800" style="font-weight:800;">
+                    {% if form.instance.pk %}Edit Listing{% else %}Create Listing{% endif %}
+                </h2>
+                <p class="text-body-secondary">
+                    {% if form.instance.pk %}Update your listing details{% else %}List an item for auction{% endif %}
+                </p>
+            </div>
+            <div class="card border-0" style="border-radius:20px;">
                 <div class="card-body p-4">
-                    <h2 class="card-title h4 mb-4">Create Listing</h2>
-                    <form method="post" enctype="multipart/form-data" novalidate>
+                    <form method="post" enctype="multipart/form-data" novalidate id="listing-form">
                         {% csrf_token %}
+                        <input type="hidden" name="crop_data" id="crop-data">
                         {% if form.non_field_errors %}
-                            <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                            <div class="alert alert-danger border-0" style="border-radius:10px;">{{ form.non_field_errors }}</div>
                         {% endif %}
+
                         {% for field in form %}
-                            <div class="mb-3">
-                                <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                                {{ field }}
-                                {% if field.errors %}
-                                    <div class="text-danger small mt-1">{{ field.errors|striptags }}</div>
-                                {% endif %}
-                                {% if field.help_text %}
-                                    <div class="form-text">{{ field.help_text }}</div>
-                                {% endif %}
-                            </div>
+                            {% if field.name == 'image' %}
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold small">{{ field.label }}</label>
+                                    <div class="image-upload-area {% if form.instance.image %}has-image{% endif %}" id="upload-area" onclick="document.getElementById('id_image').click()">
+                                        {% if form.instance.image %}
+                                            <img src="{{ form.instance.image.url }}" alt="Current image" style="width:100%;max-height:250px;object-fit:cover;">
+                                        {% else %}
+                                            <div class="py-3">
+                                                <i class="bi bi-cloud-arrow-up" style="font-size:2.5rem;color:var(--primary);opacity:.5;"></i>
+                                                <p class="fw-semibold mb-1 mt-2" style="color:var(--primary);">Click to upload image</p>
+                                                <p class="text-body-secondary small mb-0">PNG, JPG up to 5MB</p>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <input type="file" name="image" id="id_image" class="d-none" accept="image/*">
+                                    {% if field.errors %}
+                                        <div class="text-danger small mt-1">{{ field.errors|striptags }}</div>
+                                    {% endif %}
+
+                                    <div class="thumb-preview-wrapper {% if form.instance.thumbnail %}show{% endif %}" id="thumb-preview-wrapper">
+                                        <div class="d-flex align-items-center justify-content-between mb-2">
+                                            <span class="fw-semibold small">Thumbnail Preview</span>
+                                            <span class="ratio-chip"><i class="bi bi-crop"></i> 16:9</span>
+                                        </div>
+                                        {% if form.instance.thumbnail %}
+                                            <img src="{{ form.instance.thumbnail.url }}" alt="Thumbnail" class="thumb-preview" id="thumb-preview-img">
+                                        {% else %}
+                                            <img src="" alt="Thumbnail preview" class="thumb-preview" id="thumb-preview-img" style="display:none;">
+                                        {% endif %}
+                                        <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="re-crop-btn" style="border-radius:10px;display:none;">
+                                            <i class="bi bi-crop me-1"></i> Re-crop Thumbnail
+                                        </button>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold small" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                    {{ field }}
+                                    {% if field.errors %}
+                                        <div class="text-danger small mt-1">{{ field.errors|striptags }}</div>
+                                    {% endif %}
+                                    {% if field.help_text %}
+                                        <div class="form-text small">{{ field.help_text }}</div>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
                         {% endfor %}
-                        <div class="d-flex justify-content-between align-items-center">
-                            <a class="link-secondary" href="{% url 'listings:list' %}">Back to listings</a>
-                            <button type="submit" class="btn btn-primary">Create listing</button>
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <a class="text-decoration-none fw-semibold" href="{% url 'listings:list' %}" style="color:var(--primary);">
+                                <i class="bi bi-arrow-left me-1"></i> Back
+                            </a>
+                            <button type="submit" class="btn btn-glow px-4 py-2">
+                                <i class="bi bi-{% if form.instance.pk %}check-circle{% else %}rocket-takeoff{% endif %} me-1"></i>
+                                {% if form.instance.pk %}Save Changes{% else %}Create Listing{% endif %}
+                            </button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Crop Modal -->
+    <div class="crop-modal-backdrop" id="crop-modal">
+        <div class="crop-modal">
+            <div class="crop-modal-header">
+                <div>
+                    <h5 class="fw-bold mb-0">Crop Thumbnail</h5>
+                    <p class="text-body-secondary small mb-0">Select the area visible in listing cards</p>
+                </div>
+                <span class="ratio-chip"><i class="bi bi-aspect-ratio"></i> 16:9 ratio</span>
+            </div>
+            <div class="crop-modal-body">
+                <img id="crop-image" src="" alt="Crop">
+            </div>
+            <div class="crop-modal-footer">
+                <button type="button" class="btn btn-outline-secondary px-4" style="border-radius:10px;" id="crop-cancel">Cancel</button>
+                <button type="button" class="btn btn-glow px-4" id="crop-apply">
+                    <i class="bi bi-check-circle me-1"></i> Apply Crop
+                </button>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+<script>
+(function() {
+    var fileInput = document.getElementById('id_image');
+    var uploadArea = document.getElementById('upload-area');
+    var cropModal = document.getElementById('crop-modal');
+    var cropImage = document.getElementById('crop-image');
+    var cropApply = document.getElementById('crop-apply');
+    var cropCancel = document.getElementById('crop-cancel');
+    var cropDataInput = document.getElementById('crop-data');
+    var thumbWrapper = document.getElementById('thumb-preview-wrapper');
+    var thumbImg = document.getElementById('thumb-preview-img');
+    var reCropBtn = document.getElementById('re-crop-btn');
+    var cropper = null;
+    var currentFile = null;
+    var currentObjectURL = null;
+
+    fileInput.addEventListener('change', function(e) {
+        var file = e.target.files[0];
+        if (!file) return;
+        currentFile = file;
+
+        // Show preview in upload area
+        if (currentObjectURL) URL.revokeObjectURL(currentObjectURL);
+        currentObjectURL = URL.createObjectURL(file);
+        uploadArea.classList.add('has-image');
+        uploadArea.innerHTML = '<img src="' + currentObjectURL + '" alt="Preview" style="width:100%;max-height:250px;object-fit:cover;">';
+
+        // Open crop modal
+        openCropModal(currentObjectURL);
+    });
+
+    function openCropModal(src) {
+        cropImage.src = src;
+        cropModal.classList.add('show');
+        document.body.style.overflow = 'hidden';
+
+        if (cropper) cropper.destroy();
+        setTimeout(function() {
+            cropper = new Cropper(cropImage, {
+                aspectRatio: 16 / 9,
+                viewMode: 1,
+                autoCropArea: 0.9,
+                responsive: true,
+                guides: true,
+                center: true,
+                highlight: true,
+                background: true,
+                movable: true,
+                zoomable: true,
+                scalable: false,
+                rotatable: false,
+            });
+        }, 100);
+    }
+
+    function closeCropModal() {
+        cropModal.classList.remove('show');
+        document.body.style.overflow = '';
+        if (cropper) { cropper.destroy(); cropper = null; }
+    }
+
+    cropApply.addEventListener('click', function() {
+        if (!cropper) return;
+        var data = cropper.getData(true);
+        cropDataInput.value = JSON.stringify({
+            x: data.x,
+            y: data.y,
+            width: data.width,
+            height: data.height
+        });
+
+        // Generate thumb preview
+        var canvas = cropper.getCroppedCanvas({ width: 640, height: 360 });
+        thumbImg.src = canvas.toDataURL('image/jpeg', 0.85);
+        thumbImg.style.display = 'block';
+        thumbWrapper.classList.add('show');
+        reCropBtn.style.display = 'inline-flex';
+
+        closeCropModal();
+    });
+
+    cropCancel.addEventListener('click', closeCropModal);
+    cropModal.addEventListener('click', function(e) {
+        if (e.target === cropModal) closeCropModal();
+    });
+
+    if (reCropBtn) {
+        reCropBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (currentObjectURL) {
+                openCropModal(currentObjectURL);
+            } else {
+                // For existing images on edit page
+                var existingImg = uploadArea.querySelector('img');
+                if (existingImg) openCropModal(existingImg.src);
+            }
+        });
+    }
+})();
+</script>
 {% endblock %}
