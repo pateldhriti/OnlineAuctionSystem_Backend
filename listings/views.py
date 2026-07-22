@@ -7,13 +7,13 @@ from PIL import Image as PILImage
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.core.paginator import Paginator
 from django.db.models import Max, Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
+from django.views.generic import DetailView, ListView
 
 from accounts.utils import add_to_recently_viewed
 from bids.models import Bid
@@ -64,36 +64,37 @@ def get_safe_redirect_url(request, fallback_url):
 LISTINGS_PAGE_SIZE = 12
 
 
-def listing_list(request):
-    query = request.GET.get('q', '').strip()
-    active_category = request.GET.get('category', '')
-    listings = Listing.objects.select_related('seller').annotate(
-        highest_bid_amount=Max('bids__amount'),
-    ).order_by('-created_at')
-    category_values = dict(Listing.Category.choices)
+class ListingListView(ListView):
+    model = Listing
+    template_name = 'listings/listing_list.html'
+    context_object_name = 'listings'
+    paginate_by = LISTINGS_PAGE_SIZE
 
-    if query:
-        listings = listings.filter(Q(title__icontains=query) | Q(description__icontains=query))
+    def get_queryset(self):
+        query = self.request.GET.get('q', '').strip()
+        active_category = self.request.GET.get('category', '')
+        category_values = dict(Listing.Category.choices)
+        listings = Listing.objects.select_related('seller').annotate(
+            highest_bid_amount=Max('bids__amount'),
+        ).order_by('-created_at')
 
-    if active_category in category_values:
-        listings = listings.filter(category=active_category)
-    else:
-        active_category = ''
+        if query:
+            listings = listings.filter(Q(title__icontains=query) | Q(description__icontains=query))
 
-    paginator = Paginator(listings, LISTINGS_PAGE_SIZE)
-    page_obj = paginator.get_page(request.GET.get('page'))
+        if active_category in category_values:
+            listings = listings.filter(category=active_category)
 
-    return render(
-        request,
-        'listings/listing_list.html',
-        {
-            'listings': page_obj,
-            'page_obj': page_obj,
-            'categories': Listing.Category.choices,
-            'active_category': active_category,
-            'query': query,
-        },
-    )
+        return listings
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        active_category = self.request.GET.get('category', '')
+        if active_category not in dict(Listing.Category.choices):
+            active_category = ''
+        context['categories'] = Listing.Category.choices
+        context['active_category'] = active_category
+        context['query'] = self.request.GET.get('q', '').strip()
+        return context
 
 
 def _wants_json(request):
@@ -145,27 +146,31 @@ def _listing_payload(listing, is_watched, bid_state):
     }
 
 
-def listing_detail(request, pk):
-    listing = get_object_or_404(Listing.objects.select_related('seller'), pk=pk)
-    is_watched = (
-        request.user.is_authenticated
-        and listing.watchers.filter(pk=request.user.pk).exists()
-    )
-    add_to_recently_viewed(request, listing.pk)
-    bid_state = _listing_bid_state(listing)
+class ListingDetailView(DetailView):
+    model = Listing
+    template_name = 'listings/listing_detail.html'
+    context_object_name = 'listing'
 
-    if _wants_json(request):
-        return JsonResponse(_listing_payload(listing, is_watched, bid_state))
+    def get_queryset(self):
+        return Listing.objects.select_related('seller')
 
-    return render(
-        request,
-        'listings/listing_detail.html',
-        {
-            'listing': listing,
-            'is_watched': is_watched,
-            **bid_state,
-        },
-    )
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        listing = self.object
+        self._is_watched = (
+            self.request.user.is_authenticated
+            and listing.watchers.filter(pk=self.request.user.pk).exists()
+        )
+        add_to_recently_viewed(self.request, listing.pk)
+        self._bid_state = _listing_bid_state(listing)
+        context['is_watched'] = self._is_watched
+        context.update(self._bid_state)
+        return context
+
+    def render_to_response(self, context, **response_kwargs):
+        if _wants_json(self.request):
+            return JsonResponse(_listing_payload(self.object, self._is_watched, self._bid_state))
+        return super().render_to_response(context, **response_kwargs)
 
 
 @login_required
