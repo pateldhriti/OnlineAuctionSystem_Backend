@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Privacy Policy{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h1 class="mb-4">Privacy Policy</h1>
+            <p class="text-body-secondary">Last updated: {% now "F j, Y" %}</p>
+
+            <h2 class="h5 mt-4">What we collect</h2>
+            <p>
+                Account details you give us (username, name, email, phone), listing and
+                bid activity, messages you send through the site, and basic usage data
+                such as visit counts, stored via cookies and your session so we can show
+                you your own activity history.
+            </p>
+
+            <h2 class="h5 mt-4">How we use it</h2>
+            <p>
+                To run the auction platform: showing your listings and bids, notifying
+                you when you win an auction, connecting you with buyers/sellers you're
+                messaging, and remembering things like your watchlist and recently
+                viewed items.
+            </p>
+
+            <h2 class="h5 mt-4">What we don't do</h2>
+            <p>
+                We don't sell your data, and we don't share it with anyone outside of
+                what's needed to operate the site.
+            </p>
+
+            <h2 class="h5 mt-4">Questions</h2>
+            <p>
+                <a href="{% url 'home' %}#contact">Contact us</a> if you have questions
+                about this policy.
+            </p>
+        </div>
+    </div>
+{% endblock %}

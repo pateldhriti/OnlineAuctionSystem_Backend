@@ -11,6 +11,9 @@ admin.site.index_title = 'Site Administration'
 urlpatterns = [
     path('', pages_views.home, name='home'),
     path('contact/', pages_views.contact_submit, name='contact'),
+    path('about/', pages_views.about, name='about'),
+    path('privacy/', pages_views.privacy, name='privacy'),
+    path('terms/', pages_views.terms, name='terms'),
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')),
     path('listings/', include('listings.urls')),

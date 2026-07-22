@@ -12,6 +12,18 @@ def home(request):
     return render(request, 'pages/home.html', {'contact_form': ContactForm()})
 
 
+def about(request):
+    return render(request, 'pages/about.html')
+
+
+def privacy(request):
+    return render(request, 'pages/privacy.html')
+
+
+def terms(request):
+    return render(request, 'pages/terms.html')
+
+
 @require_POST
 def contact_submit(request):
     form = ContactForm(request.POST)

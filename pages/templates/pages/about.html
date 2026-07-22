@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}About Us{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h1 class="mb-4">About Online Auction</h1>
+            <p>
+                Online Auction started as a simple idea: buying and selling at auction
+                shouldn't require any manual bookkeeping. Sellers list an item with a
+                starting price and a deadline; bidders compete for the best price; when
+                the clock runs out, the highest bid wins automatically and both sides are
+                notified. No spreadsheets, no chasing people down for payment status,
+                no guesswork about who won.
+            </p>
+            <p>
+                We're a small, focused platform - live bidding, automatic winner
+                selection, and direct messaging between buyers and sellers, and nothing
+                you don't need.
+            </p>
+            <p>
+                Questions? <a href="{% url 'home' %}#contact">Get in touch</a>.
+            </p>
+        </div>
+    </div>
+{% endblock %}

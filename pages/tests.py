@@ -58,3 +58,39 @@ class ContactFormTests(TestCase):
         response = self.client.get(reverse('contact'))
 
         self.assertEqual(response.status_code, 405)
+
+
+class StaticContentPageTests(TestCase):
+    def test_about_page_renders(self):
+        response = self.client.get(reverse('about'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'pages/about.html')
+
+    def test_privacy_page_renders(self):
+        response = self.client.get(reverse('privacy'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'pages/privacy.html')
+
+    def test_terms_page_renders(self):
+        response = self.client.get(reverse('terms'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'pages/terms.html')
+
+
+class FooterTests(TestCase):
+    def test_footer_appears_on_every_page(self):
+        response = self.client.get(reverse('home'))
+
+        self.assertContains(response, 'Follow Us')
+        self.assertContains(response, reverse('about'))
+        self.assertContains(response, reverse('privacy'))
+        self.assertContains(response, reverse('terms'))
+        self.assertContains(response, 'All rights reserved.')
+
+    def test_footer_links_resolve(self):
+        for url_name in ['about', 'privacy', 'terms']:
+            response = self.client.get(reverse(url_name))
+            self.assertEqual(response.status_code, 200, f'{url_name} did not return 200')
