@@ -86,6 +86,24 @@ class PlaceBidCreatesConversationTests(TestCase):
 
         self.assertIsNone(response.context['conversation'])
 
+    def test_bid_history_page_backfills_a_conversation_for_a_pre_existing_bid(self):
+        """A Bid placed before the conversation-on-bid trigger existed (or by
+        any other means that bypassed place_bid) should still get a working
+        "Message seller" link the next time the bid history page loads,
+        rather than being permanently missing one.
+        """
+        from bids.models import Bid
+
+        Bid.objects.create(listing=self.listing, bidder=self.bidder, amount='30.00')
+        self.assertFalse(Conversation.objects.filter(listing=self.listing, bidder=self.bidder).exists())
+        self.client.force_login(self.bidder)
+
+        response = self.client.get(reverse('bids:history', args=[self.listing.pk]))
+
+        conversation = Conversation.objects.get(listing=self.listing, bidder=self.bidder)
+        self.assertEqual(response.context['conversation'], conversation)
+        self.assertContains(response, reverse('conversations:detail', args=[conversation.pk]))
+
 
 class ConversationListViewTests(TestCase):
     def setUp(self):

@@ -27,7 +27,10 @@ def _bid_history_context(request, listing, form=None):
     page_obj = paginator.get_page(request.GET.get('page'))
     conversation = None
     if request.user.is_authenticated and listing.seller_id != request.user.pk:
-        conversation = Conversation.objects.filter(listing=listing, bidder=request.user).first()
+        # Back-fills a conversation for anyone who has ever bid, not just
+        # bids placed after the trigger in place_bid() existed.
+        if Bid.objects.filter(listing=listing, bidder=request.user).exists():
+            conversation, _ = Conversation.objects.get_or_create(listing=listing, bidder=request.user)
     return {
         'listing': listing,
         'bids': page_obj,
