@@ -91,30 +91,32 @@
                     </div>
                 </div>
 
-                <div class="col-6 col-lg-2">
-                    <div class="text-uppercase small fw-semibold mb-2">Explore</div>
-                    <ul class="list-unstyled small">
-                        <li class="mb-2"><a class="link-light link-underline-opacity-0 text-body-secondary" href="{% url 'listings:list' %}">Listings</a></li>
-                        <li class="mb-2"><a class="link-light link-underline-opacity-0 text-body-secondary" href="{% url 'listings:create' %}">Sell an item</a></li>
-                        <li class="mb-2"><a class="link-light link-underline-opacity-0 text-body-secondary" href="{% url 'home' %}#contact">Contact us</a></li>
-                    </ul>
-                </div>
+                <div class="col-lg-8 d-flex flex-wrap gap-4 gap-lg-5">
+                    <div>
+                        <div class="text-uppercase small fw-semibold mb-2">Explore</div>
+                        <ul class="list-unstyled small">
+                            <li class="mb-2"><a class="link-light link-underline-opacity-0 link-underline-opacity-75-hover" href="{% url 'listings:list' %}">Listings</a></li>
+                            <li class="mb-2"><a class="link-light link-underline-opacity-0 link-underline-opacity-75-hover" href="{% url 'listings:create' %}">Sell an item</a></li>
+                            <li class="mb-2"><a class="link-light link-underline-opacity-0 link-underline-opacity-75-hover" href="{% url 'home' %}#contact">Contact us</a></li>
+                        </ul>
+                    </div>
 
-                <div class="col-6 col-lg-3">
-                    <div class="text-uppercase small fw-semibold mb-2">Company</div>
-                    <ul class="list-unstyled small">
-                        <li class="mb-2"><a class="link-light link-underline-opacity-0 text-body-secondary" href="{% url 'about' %}">About Us</a></li>
-                        <li class="mb-2"><a class="link-light link-underline-opacity-0 text-body-secondary" href="{% url 'accounts:register' %}">Register</a></li>
-                        <li class="mb-2"><a class="link-light link-underline-opacity-0 text-body-secondary" href="{% url 'accounts:login' %}">Login</a></li>
-                    </ul>
-                </div>
+                    <div>
+                        <div class="text-uppercase small fw-semibold mb-2">Company</div>
+                        <ul class="list-unstyled small">
+                            <li class="mb-2"><a class="link-light link-underline-opacity-0 link-underline-opacity-75-hover" href="{% url 'about' %}">About Us</a></li>
+                            <li class="mb-2"><a class="link-light link-underline-opacity-0 link-underline-opacity-75-hover" href="{% url 'accounts:register' %}">Register</a></li>
+                            <li class="mb-2"><a class="link-light link-underline-opacity-0 link-underline-opacity-75-hover" href="{% url 'accounts:login' %}">Login</a></li>
+                        </ul>
+                    </div>
 
-                <div class="col-6 col-lg-3">
-                    <div class="text-uppercase small fw-semibold mb-2">Legal</div>
-                    <ul class="list-unstyled small">
-                        <li class="mb-2"><a class="link-light link-underline-opacity-0 text-body-secondary" href="{% url 'privacy' %}">Privacy Policy</a></li>
-                        <li class="mb-2"><a class="link-light link-underline-opacity-0 text-body-secondary" href="{% url 'terms' %}">Terms of Service</a></li>
-                    </ul>
+                    <div>
+                        <div class="text-uppercase small fw-semibold mb-2">Legal</div>
+                        <ul class="list-unstyled small">
+                            <li class="mb-2"><a class="link-light link-underline-opacity-0 link-underline-opacity-75-hover" href="{% url 'privacy' %}">Privacy Policy</a></li>
+                            <li class="mb-2"><a class="link-light link-underline-opacity-0 link-underline-opacity-75-hover" href="{% url 'terms' %}">Terms of Service</a></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
 
