@@ -1,7 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Max
+from django.db.models import Max, Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -30,11 +30,15 @@ LISTINGS_PAGE_SIZE = 12
 
 
 def listing_list(request):
+    query = request.GET.get('q', '').strip()
     active_category = request.GET.get('category', '')
     listings = Listing.objects.select_related('seller').annotate(
         highest_bid_amount=Max('bids__amount'),
     ).order_by('-created_at')
     category_values = dict(Listing.Category.choices)
+
+    if query:
+        listings = listings.filter(Q(title__icontains=query) | Q(description__icontains=query))
 
     if active_category in category_values:
         listings = listings.filter(category=active_category)
@@ -52,6 +56,7 @@ def listing_list(request):
             'page_obj': page_obj,
             'categories': Listing.Category.choices,
             'active_category': active_category,
+            'query': query,
         },
     )
 

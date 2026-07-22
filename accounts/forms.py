@@ -1,8 +1,13 @@
+import os
+
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm, UserCreationForm
 from django.contrib.auth.models import User
 
 from .models import UserProfile
+
+MAX_DOCUMENT_SIZE_BYTES = 5 * 1024 * 1024
+ALLOWED_DOCUMENT_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.pdf'}
 
 
 class RegisterForm(UserCreationForm):
@@ -50,12 +55,40 @@ class UserUpdateForm(forms.ModelForm):
             field.widget.attrs['class'] = 'form-control'
 
 
+class AuctionPasswordResetForm(PasswordResetForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs['class'] = 'form-control'
+
+
+class AuctionSetPasswordForm(SetPasswordForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs['class'] = 'form-control'
+
+
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
-        fields = ['phone', 'bio']
+        fields = ['phone', 'bio', 'id_document']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
             field.widget.attrs['class'] = 'form-control'
+
+    def clean_id_document(self):
+        document = self.cleaned_data.get('id_document')
+        if not document:
+            return document
+        # Only validate newly-uploaded files (UploadedFile has content_type);
+        # an unchanged existing FieldFile shouldn't be re-checked every save.
+        if hasattr(document, 'content_type'):
+            extension = os.path.splitext(document.name)[1].lower()
+            if extension not in ALLOWED_DOCUMENT_EXTENSIONS:
+                raise forms.ValidationError('Upload a JPG, PNG, or PDF file.')
+            if document.size > MAX_DOCUMENT_SIZE_BYTES:
+                raise forms.ValidationError('File must be smaller than 5MB.')
+        return document

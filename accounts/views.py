@@ -3,11 +3,13 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib import messages
 from django.shortcuts import render, redirect
+from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
 from .forms import RegisterForm, LoginForm, UserUpdateForm, ProfileForm
-from .models import UserProfile
+from .middleware import VISIT_COOKIE_NAME
+from .models import DailyVisit, UserProfile
 from .utils import get_recently_viewed_ids
 
 
@@ -74,7 +76,7 @@ def profile_edit_view(request):
     profile, _ = UserProfile.objects.get_or_create(user=request.user)
     if request.method == 'POST':
         user_form = UserUpdateForm(request.POST, instance=request.user)
-        profile_form = ProfileForm(request.POST, instance=profile)
+        profile_form = ProfileForm(request.POST, request.FILES, instance=profile)
         if user_form.is_valid() and profile_form.is_valid():
             user_form.save()
             profile_form.save()
@@ -86,6 +88,31 @@ def profile_edit_view(request):
     return render(request, 'accounts/profile_edit.html', {
         'user_form': user_form,
         'profile_form': profile_form,
+    })
+
+
+@login_required
+def history_view(request):
+    from django.db.models import Sum
+
+    from listings.models import Listing
+
+    daily_visits = list(DailyVisit.objects.filter(user=request.user)[:14])
+    total_visits = DailyVisit.objects.filter(user=request.user).aggregate(
+        total=Sum('visit_count'),
+    )['total'] or 0
+    today_row = daily_visits[0] if daily_visits and daily_visits[0].date == timezone.localdate() else None
+
+    viewed_ids = get_recently_viewed_ids(request)
+    listings_map = {l.id: l for l in Listing.objects.filter(id__in=viewed_ids)}
+    recently_viewed = [listings_map[i] for i in viewed_ids if i in listings_map]
+
+    return render(request, 'accounts/history.html', {
+        'daily_visits': daily_visits,
+        'total_visits': total_visits,
+        'visits_today': today_row.visit_count if today_row else 0,
+        'last_visit_cookie': request.COOKIES.get(VISIT_COOKIE_NAME),
+        'recently_viewed': recently_viewed,
     })
 
 

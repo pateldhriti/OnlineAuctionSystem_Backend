@@ -8,7 +8,7 @@
         <div class="card shadow-sm">
             <div class="card-header">Edit Profile</div>
             <div class="card-body p-4">
-                <form method="post" novalidate>
+                <form method="post" enctype="multipart/form-data" novalidate>
                     {% csrf_token %}
                     <h6 class="text-body-secondary mb-3">Account Info</h6>
                     {% for field in user_form %}

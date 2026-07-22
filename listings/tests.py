@@ -179,6 +179,43 @@ class ListingViewTests(TestCase):
         self.assertContains(response, 'Bluetooth Speaker')
         self.assertNotContains(response, 'Vintage Clock')
 
+    def test_list_view_searches_by_title(self):
+        self.make_listing(title='Vintage Clock', description='A small table clock.')
+        self.make_listing(title='Bluetooth Speaker', description='Portable wireless audio.')
+
+        response = self.client.get(reverse('listings:list'), {'q': 'clock'})
+
+        self.assertContains(response, 'Vintage Clock')
+        self.assertNotContains(response, 'Bluetooth Speaker')
+
+    def test_list_view_searches_by_description(self):
+        self.make_listing(title='Vintage Clock', description='Hand-wound antique timepiece.')
+        self.make_listing(title='Bluetooth Speaker', description='Portable wireless audio.')
+
+        response = self.client.get(reverse('listings:list'), {'q': 'antique'})
+
+        self.assertContains(response, 'Vintage Clock')
+        self.assertNotContains(response, 'Bluetooth Speaker')
+
+    def test_list_view_combines_search_and_category(self):
+        self.make_listing(title='Vintage Clock', category=Listing.Category.HOME)
+        self.make_listing(title='Vintage Car', category=Listing.Category.VEHICLES)
+
+        response = self.client.get(
+            reverse('listings:list'),
+            {'q': 'vintage', 'category': Listing.Category.HOME},
+        )
+
+        self.assertContains(response, 'Vintage Clock')
+        self.assertNotContains(response, 'Vintage Car')
+
+    def test_list_view_shows_no_results_message_for_unmatched_search(self):
+        self.make_listing(title='Vintage Clock')
+
+        response = self.client.get(reverse('listings:list'), {'q': 'nonexistent-item'})
+
+        self.assertContains(response, 'No listings match your search')
+
     def test_detail_view_shows_listing(self):
         listing = self.make_listing()
 

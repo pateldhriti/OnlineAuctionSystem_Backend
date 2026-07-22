@@ -10,6 +10,31 @@
         {% endif %}
     </div>
 
+    <form method="get" action="{% url 'listings:list' %}" class="row g-2 mb-4">
+        <div class="col-sm-6">
+            <input
+                type="search" name="q" class="form-control" placeholder="Search listings by title or description…"
+                value="{{ query }}" aria-label="Search listings"
+            >
+        </div>
+        <div class="col-sm-4">
+            <select name="category" class="form-select" aria-label="Filter by category">
+                <option value="">All categories</option>
+                {% for value, label in categories %}
+                    <option value="{{ value }}" {% if value == active_category %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-sm-2">
+            <button type="submit" class="btn btn-primary w-100">Search</button>
+        </div>
+        {% if query or active_category %}
+            <div class="col-12">
+                <a href="{% url 'listings:list' %}" class="small">Clear search</a>
+            </div>
+        {% endif %}
+    </form>
+
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
         {% for listing in listings %}
             <div class="col">
@@ -49,8 +74,13 @@
         {% empty %}
             <div class="col-12">
                 <div class="alert alert-secondary text-center py-5 mb-0">
-                    <h5 class="mb-1">No listings yet</h5>
-                    <p class="mb-0">Be the first to put something up for auction.</p>
+                    {% if query or active_category %}
+                        <h5 class="mb-1">No listings match your search</h5>
+                        <p class="mb-0">Try a different keyword or category.</p>
+                    {% else %}
+                        <h5 class="mb-1">No listings yet</h5>
+                        <p class="mb-0">Be the first to put something up for auction.</p>
+                    {% endif %}
                 </div>
             </div>
         {% endfor %}
@@ -61,7 +91,7 @@
             <ul class="pagination justify-content-center">
                 <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
                     {% if page_obj.has_previous %}
-                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if active_category %}&category={{ active_category }}{% endif %}">Previous</a>
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query|urlencode }}{% endif %}{% if active_category %}&category={{ active_category }}{% endif %}">Previous</a>
                     {% else %}
                         <span class="page-link">Previous</span>
                     {% endif %}
@@ -71,7 +101,7 @@
                 </li>
                 <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
                     {% if page_obj.has_next %}
-                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if active_category %}&category={{ active_category }}{% endif %}">Next</a>
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query|urlencode }}{% endif %}{% if active_category %}&category={{ active_category }}{% endif %}">Next</a>
                     {% else %}
                         <span class="page-link">Next</span>
                     {% endif %}
