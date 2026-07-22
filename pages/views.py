@@ -17,10 +17,10 @@ def about(request):
 
 
 TEAM_MEMBERS = [
-    {'name': 'Nishtha Pandya', 'role': 'Developer'},
-    {'name': 'Bhavik Patel', 'role': 'Developer'},
-    {'name': 'Dhruvi Patel', 'role': 'Developer'},
+    {'name': 'Bhavik Thumbadiya', 'role': 'Developer'},
     {'name': 'Dhriti Patel', 'role': 'Developer'},
+    {'name': 'Dhruvi Patel', 'role': 'Developer'},
+    {'name': 'Nishtha Pandya', 'role': 'Developer'},
     {'name': 'Sarhan Kapadiya', 'role': 'Developer'},
 ]
 
