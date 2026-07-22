@@ -1,6 +1,7 @@
 import shutil
 import tempfile
 from datetime import timedelta
+from decimal import Decimal
 
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -345,6 +346,52 @@ class ListingViewTests(TestCase):
 
         listing.refresh_from_db()
         self.assertEqual(listing.ends_at.replace(second=0, microsecond=0), new_ends_at.replace(second=0, microsecond=0))
+
+    def test_owner_can_update_starting_price_before_any_bids(self):
+        listing = self.make_listing(starting_price='25.00')
+        self.client.force_login(self.user)
+
+        self.client.post(
+            reverse('listings:update', args=[listing.pk]),
+            {
+                'title': listing.title,
+                'description': listing.description,
+                'category': listing.category,
+                'starting_price': '40.00',
+            },
+        )
+
+        listing.refresh_from_db()
+        self.assertEqual(listing.starting_price, Decimal('40.00'))
+
+    def test_starting_price_locked_once_bidding_has_started(self):
+        listing = self.make_listing(starting_price='25.00')
+        Bid.objects.create(listing=listing, bidder=self.buyer, amount='30.00')
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse('listings:update', args=[listing.pk]),
+            {
+                'title': listing.title,
+                'description': listing.description,
+                'category': listing.category,
+                'starting_price': '5.00',
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        listing.refresh_from_db()
+        self.assertEqual(listing.starting_price, Decimal('25.00'))
+
+    def test_edit_form_shows_locked_price_notice_once_bidding_has_started(self):
+        listing = self.make_listing()
+        Bid.objects.create(listing=listing, bidder=self.buyer, amount='30.00')
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('listings:update', args=[listing.pk]))
+
+        self.assertContains(response, 'disabled')
+        self.assertContains(response, 'Starting price can&#x27;t be changed once bidding has started.')
 
     def test_create_listing_form_accepts_multipart_encoding(self):
         """The rendered form must be able to actually submit the image field.

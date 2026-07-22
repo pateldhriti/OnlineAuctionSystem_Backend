@@ -32,6 +32,14 @@ class ListingForm(forms.ModelForm):
             'image': forms.ClearableFileInput(attrs={'class': 'form-control'}),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance.pk and self.instance.bids.exists():
+            self.fields['starting_price'].disabled = True
+            self.fields['starting_price'].help_text = (
+                "Starting price can't be changed once bidding has started."
+            )
+
     def clean_starting_price(self):
         starting_price = self.cleaned_data['starting_price']
         if starting_price <= 0:
