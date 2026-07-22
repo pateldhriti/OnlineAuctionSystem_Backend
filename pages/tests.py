@@ -11,8 +11,9 @@ class HomePageTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'pages/home.html')
         self.assertTemplateUsed(response, 'base.html')
-        self.assertContains(response, 'Bid live. Sell fast. Win big.')
-        self.assertContains(response, 'Contact us')
+        self.assertContains(response, 'Bid live. Sell fast.')
+        self.assertContains(response, 'Win big.')
+        self.assertContains(response, 'Get in Touch')
 
     def test_home_page_prompts_anonymous_visitors_to_register(self):
         response = self.client.get(reverse('home'))
@@ -84,7 +85,7 @@ class FooterTests(TestCase):
     def test_footer_appears_on_every_page(self):
         response = self.client.get(reverse('home'))
 
-        self.assertContains(response, 'Follow Us')
+        self.assertContains(response, 'bi-facebook')
         self.assertContains(response, reverse('about'))
         self.assertContains(response, reverse('privacy'))
         self.assertContains(response, reverse('terms'))

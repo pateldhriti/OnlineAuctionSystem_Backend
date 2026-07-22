@@ -183,7 +183,7 @@ class BidHistoryViewTests(TestCase):
 
         self.assertEqual(len(first_page.context['page_obj']), BIDS_PAGE_SIZE)
         self.assertEqual(len(second_page.context['page_obj']), 1)
-        self.assertContains(first_page, 'Page 1 of 2')
+        self.assertContains(first_page, '1 / 2')
 
     def test_history_page_shows_starting_price_with_no_bids(self):
         response = self.client.get(reverse('bids:history', args=[self.listing.pk]))

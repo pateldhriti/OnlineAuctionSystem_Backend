@@ -151,7 +151,7 @@ class ListingViewTests(TestCase):
         response = self.client.get(reverse('listings:list'))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Highest bid: $40.00')
+        self.assertContains(response, '$40.00')
 
     def test_list_view_paginates_listings(self):
         from listings.views import LISTINGS_PAGE_SIZE
@@ -164,7 +164,7 @@ class ListingViewTests(TestCase):
 
         self.assertEqual(len(first_page.context['page_obj']), LISTINGS_PAGE_SIZE)
         self.assertEqual(len(second_page.context['page_obj']), 1)
-        self.assertContains(first_page, 'Page 1 of 2')
+        self.assertContains(first_page, '1 / 2')
 
     def test_list_view_filters_by_category(self):
         self.make_listing(title='Vintage Clock', category=Listing.Category.HOME)

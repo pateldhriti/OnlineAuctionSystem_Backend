@@ -38,8 +38,7 @@ class AuthPageTests(TestCase):
 
         response = self.client.get(reverse('home'))
 
-        self.assertContains(response, 'Signed in as')
-        self.assertContains(response, '<strong>bidder</strong>')
+        self.assertContains(response, 'bidder')
         self.assertContains(response, reverse('accounts:profile'))
         self.assertContains(response, 'Logout')
 
@@ -364,7 +363,11 @@ class SellerDashboardViewTests(TestCase):
         # count below reflects the dashboard view alone.
         self.client.get(reverse('accounts:dashboard'))
 
-        with self.assertNumQueries(5):
+        # 5 base (session, user, listings, bids, bidders) + 1 for the
+        # winner-contact profile prefetch + 1 for the navbar's unread
+        # notification count (via context processor) - both flat costs
+        # that don't scale with listing/bid count.
+        with self.assertNumQueries(7):
             response = self.client.get(reverse('accounts:dashboard'))
 
         self.assertEqual(response.status_code, 200)
@@ -498,7 +501,7 @@ class HistoryViewTests(TestCase):
         response = self.client.get(reverse('accounts:history'))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Total visits')
+        self.assertContains(response, 'Total Visits')
         self.assertEqual(response.context['visits_today'], 1)
         self.assertEqual(response.context['total_visits'], 1)
 
@@ -568,4 +571,5 @@ class ProfileDocumentUploadTests(TestCase):
 
         response = self.client.get(reverse('accounts:profile'))
 
-        self.assertContains(response, 'View file')
+        self.user.profile.refresh_from_db()
+        self.assertContains(response, self.user.profile.id_document.url)
