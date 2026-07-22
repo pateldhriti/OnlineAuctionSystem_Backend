@@ -7,30 +7,65 @@ a scheduled backend job (e.g. a cron entry running the
 from django.core.mail import send_mail
 from django.conf import settings
 
-from bids.models import Bid
+from bids.models import AutoBid, Bid
+from conversations.models import Conversation
+from notifications.helpers import notify_auction_lost, notify_auction_sold, notify_auction_won
+
+
+def _contact_block(user):
+    lines = [f'  Name: {user.get_full_name() or user.username}']
+    if user.email:
+        lines.append(f'  Email: {user.email}')
+    profile = getattr(user, 'profile', None)
+    if profile and profile.phone:
+        lines.append(f'  Phone: {profile.phone}')
+    return '\n'.join(lines)
 
 
 def notify_winner(listing, winning_bid):
-    """Email the winning bidder that they won ``listing``.
-
-    Never raises: a listing title crafted to break header encoding (or any
-    other mail-sending failure) must not stop the caller from finishing the
-    rest of a batch close. ``fail_silently=True`` covers most backends, but
-    header-validation errors from some backends (e.g. smtp) can surface
-    before that guard applies, so this also catches explicitly.
-    """
+    """Email the winning bidder with the seller's contact details."""
     if not winning_bid.bidder.email:
         return
+    seller = listing.seller
     try:
         send_mail(
             subject=f'You won the auction for "{listing.title}"!',
             message=(
-                f'Congratulations, {winning_bid.bidder.username}!\n\n'
-                f'Your bid of {winning_bid.amount} won the auction for '
-                f'"{listing.title}".'
+                f'Congratulations, {winning_bid.bidder.get_full_name() or winning_bid.bidder.username}!\n\n'
+                f'Your bid of ${winning_bid.amount} won the auction for '
+                f'"{listing.title}".\n\n'
+                f'Here are the seller\'s contact details so you can arrange '
+                f'payment and delivery:\n\n'
+                f'{_contact_block(seller)}\n\n'
+                f'Please reach out to the seller to complete your transaction.\n\n'
+                f'Thank you for using Online Auction!'
             ),
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[winning_bid.bidder.email],
+            fail_silently=True,
+        )
+    except Exception:
+        pass
+
+
+def notify_seller(listing, winning_bid):
+    """Email the seller with the winner's contact details."""
+    if not listing.seller.email:
+        return
+    winner = winning_bid.bidder
+    try:
+        send_mail(
+            subject=f'Your auction for "{listing.title}" has ended - You have a buyer!',
+            message=(
+                f'Hello {listing.seller.get_full_name() or listing.seller.username},\n\n'
+                f'Your auction for "{listing.title}" has ended.\n\n'
+                f'The winning bid of ${winning_bid.amount} was placed by:\n\n'
+                f'{_contact_block(winner)}\n\n'
+                f'Please reach out to the buyer to arrange payment and delivery.\n\n'
+                f'Thank you for selling on Online Auction!'
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[listing.seller.email],
             fail_silently=True,
         )
     except Exception:
@@ -47,8 +82,9 @@ def close_auction(listing):
 
     Marks the listing ``closed``, marks the highest bid as the winner
     (breaking any tie by earliest bid, per ``Bid.Meta.ordering``), and
-    emails the winner. Returns the winning ``Bid``, or ``None`` if the
-    listing had no bids or didn't need closing.
+    emails both the winner and the seller with each other's contact
+    details. Returns the winning ``Bid``, or ``None`` if the listing had
+    no bids or didn't need closing.
     """
     if listing.status != listing.STATUS_ENDED:
         return None
@@ -62,5 +98,28 @@ def close_auction(listing):
 
     winning_bid.is_winner = True
     winning_bid.save(update_fields=['is_winner'])
+    Conversation.objects.get_or_create(listing=listing, bidder=winning_bid.bidder)
+    AutoBid.objects.filter(listing=listing).update(is_active=False)
+
     notify_winner(listing, winning_bid)
+    notify_seller(listing, winning_bid)
+    notify_auction_won(winning_bid.bidder, listing, winning_bid.amount)
+    notify_auction_sold(listing.seller, listing, winning_bid.amount, winning_bid.bidder)
+
+    losing_bidder_ids = (
+        Bid.objects
+        .filter(listing=listing)
+        .exclude(bidder=winning_bid.bidder)
+        .values_list('bidder_id', flat=True)
+        .distinct()
+    )
+    for bidder_id in losing_bidder_ids:
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        try:
+            loser = User.objects.get(pk=bidder_id)
+            notify_auction_lost(loser, listing)
+        except User.DoesNotExist:
+            pass
+
     return winning_bid

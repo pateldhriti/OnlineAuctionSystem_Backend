@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications — AuctionHub{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h2><i class="bi bi-bell me-2"></i>Notifications</h2>
+        {% if unread_count %}
+            <p class="mb-0" style="opacity:.8;font-size:.95rem;">You have {{ unread_count }} unread notification{{ unread_count|pluralize }}</p>
+        {% else %}
+            <p class="mb-0" style="opacity:.8;font-size:.95rem;">You're all caught up</p>
+        {% endif %}
+    </div>
+    {% if unread_count %}
+        <form method="post" action="{% url 'notifications:mark_all_read' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-light fw-semibold px-4" style="border-radius:10px;">
+                <i class="bi bi-check2-all me-1"></i> Mark all read
+            </button>
+        </form>
+    {% endif %}
+</div>
+
+<div class="d-flex flex-column gap-2">
+    {% for notif in notifications %}
+        <div class="notif-item d-flex align-items-start gap-3 {% if not notif.is_read %}notif-unread{% endif %} fade-up">
+            <div class="notif-icon
+                {% if notif.notification_type == 'outbid' %}" style="background:rgba(243,156,18,.12);color:var(--warning);">
+                    <i class="bi bi-arrow-up-circle-fill"></i>
+                {% elif notif.notification_type == 'auction_won' %}" style="background:linear-gradient(135deg,var(--success)20,#38ef7d20);color:var(--success);">
+                    <i class="bi bi-trophy-fill"></i>
+                {% elif notif.notification_type == 'auction_lost' %}" style="background:linear-gradient(135deg,var(--danger)20,#f5656520);color:var(--danger);">
+                    <i class="bi bi-x-circle-fill"></i>
+                {% elif notif.notification_type == 'auction_sold' %}" style="background:linear-gradient(135deg,var(--success)20,#38ef7d20);color:var(--success);">
+                    <i class="bi bi-cash-coin"></i>
+                {% elif notif.notification_type == 'new_bid' %}" style="background:linear-gradient(135deg,var(--primary)20,var(--primary-dark)20);color:var(--primary);">
+                    <i class="bi bi-hammer"></i>
+                {% elif notif.notification_type == 'new_message' %}" style="background:linear-gradient(135deg,var(--primary)20,var(--primary-dark)20);color:var(--primary);">
+                    <i class="bi bi-chat-dots-fill"></i>
+                {% elif notif.notification_type == 'auto_bid_placed' %}" style="background:linear-gradient(135deg,var(--primary)20,var(--primary-dark)20);color:var(--primary);">
+                    <i class="bi bi-robot"></i>
+                {% elif notif.notification_type == 'auto_bid_exceeded' %}" style="background:rgba(243,156,18,.12);color:var(--warning);">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                {% elif notif.notification_type == 'auction_ending' %}" style="background:rgba(243,156,18,.12);color:var(--warning);">
+                    <i class="bi bi-clock-fill"></i>
+                {% else %}" style="background:#f0f0f0;color:#6c757d;">
+                    <i class="bi bi-bell-fill"></i>
+                {% endif %}
+            </div>
+            <div class="flex-grow-1">
+                <div class="fw-bold" style="font-size:.95rem;">{{ notif.title }}</div>
+                <p class="mb-0 text-body-secondary small" style="line-height:1.5;">{{ notif.message }}</p>
+            </div>
+            <div class="text-end text-nowrap d-flex flex-column align-items-end gap-1">
+                <span class="text-body-secondary" style="font-size:.75rem;">{{ notif.created_at|timesince }} ago</span>
+                {% if not notif.is_read %}
+                    <form method="post" action="{% url 'notifications:mark_read' notif.pk %}">
+                        {% csrf_token %}
+                        {% if notif.link %}
+                            <button type="submit" class="btn btn-glow btn-sm" style="font-size:.75rem;padding:.25rem .7rem;">View</button>
+                        {% else %}
+                            <button type="submit" class="btn btn-outline-secondary btn-sm" style="font-size:.75rem;padding:.25rem .7rem;border-radius:8px;">Dismiss</button>
+                        {% endif %}
+                    </form>
+                {% elif notif.link %}
+                    <a href="{{ notif.link }}" class="btn btn-outline-secondary btn-sm" style="font-size:.75rem;padding:.25rem .7rem;border-radius:8px;">View</a>
+                {% endif %}
+            </div>
+        </div>
+    {% empty %}
+        <div class="card border-0 empty-state" style="border-radius:20px;">
+            <i class="bi bi-bell"></i>
+            <h5 class="fw-bold">No notifications yet</h5>
+            <p class="text-body-secondary">You'll see alerts here when someone bids on your listings, you get outbid, or you win an auction.</p>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

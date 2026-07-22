@@ -1,27 +1,65 @@
 {% extends 'base.html' %}
 
-{% block title %}About Us{% endblock %}
+{% block title %}About Us — AuctionHub{% endblock %}
 
 {% block content %}
-    <div class="row justify-content-center">
+    <div class="row justify-content-center py-3">
         <div class="col-lg-8">
-            <h1 class="mb-4">About Online Auction</h1>
-            <p>
-                Online Auction started as a simple idea: buying and selling at auction
-                shouldn't require any manual bookkeeping. Sellers list an item with a
-                starting price and a deadline; bidders compete for the best price; when
-                the clock runs out, the highest bid wins automatically and both sides are
-                notified. No spreadsheets, no chasing people down for payment status,
-                no guesswork about who won.
-            </p>
-            <p>
-                We're a small, focused platform - live bidding, automatic winner
-                selection, and direct messaging between buyers and sellers, and nothing
-                you don't need.
-            </p>
-            <p>
-                Questions? <a href="{% url 'home' %}#contact">Get in touch</a>.
-            </p>
+            <div class="text-center mb-4">
+                <div class="d-inline-flex align-items-center justify-content-center mb-3" style="width:64px;height:64px;border-radius:18px;background:var(--primary-gradient);color:#fff;font-size:1.6rem;">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+                <h1 class="fw-800" style="font-weight:800;">About AuctionHub</h1>
+            </div>
+
+            <div class="card border-0 p-4 p-lg-5" style="border-radius:20px;">
+                <p class="fs-5" style="line-height:1.8;">
+                    AuctionHub started as a simple idea: buying and selling at auction
+                    shouldn't require any manual bookkeeping. Sellers list an item with a
+                    starting price and a deadline; bidders compete for the best price; when
+                    the clock runs out, the highest bid wins automatically and both sides are
+                    notified.
+                </p>
+                <p style="line-height:1.8;">
+                    No spreadsheets, no chasing people down for payment status,
+                    no guesswork about who won.
+                </p>
+                <p style="line-height:1.8;">
+                    We're a small, focused platform — live bidding, automatic winner
+                    selection, proxy auto-bidding, snipe protection, and direct messaging between buyers and sellers.
+                    Everything you need, nothing you don't.
+                </p>
+
+                <div class="row g-3 mt-4">
+                    <div class="col-md-4">
+                        <div class="p-3 rounded-3 text-center" style="background:rgba(108,92,231,.06);">
+                            <i class="bi bi-lightning-charge-fill" style="font-size:1.5rem;color:var(--primary);"></i>
+                            <h6 class="fw-bold mt-2 mb-1">Fast</h6>
+                            <p class="text-body-secondary small mb-0">Real-time bidding with instant updates</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 rounded-3 text-center" style="background:rgba(0,184,148,.06);">
+                            <i class="bi bi-shield-check" style="font-size:1.5rem;color:var(--success);"></i>
+                            <h6 class="fw-bold mt-2 mb-1">Fair</h6>
+                            <p class="text-body-secondary small mb-0">Snipe protection ensures fair competition</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 rounded-3 text-center" style="background:rgba(253,121,168,.06);">
+                            <i class="bi bi-heart-fill" style="font-size:1.5rem;color:var(--accent);"></i>
+                            <h6 class="fw-bold mt-2 mb-1">Simple</h6>
+                            <p class="text-body-secondary small mb-0">No clutter, just what you need</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <p class="text-body-secondary">
+                        Questions? <a href="{% url 'home' %}#contact" class="fw-semibold text-decoration-none" style="color:var(--primary);">Get in touch</a>.
+                    </p>
+                </div>
+            </div>
         </div>
     </div>
 {% endblock %}

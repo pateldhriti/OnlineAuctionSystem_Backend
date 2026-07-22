@@ -65,6 +65,13 @@ def send_message(request, pk):
         message.conversation = conversation
         message.sender = request.user
         message.save()
+        from notifications.helpers import notify_new_message
+        recipient = (
+            conversation.listing.seller
+            if request.user.pk == conversation.bidder_id
+            else conversation.bidder
+        )
+        notify_new_message(recipient, request.user, conversation)
         return redirect('conversations:detail', pk=conversation.pk)
     messages.error(request, 'Could not send message.')
     return render(request, 'conversations/conversation_detail.html', {

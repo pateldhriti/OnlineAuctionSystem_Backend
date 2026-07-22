@@ -17,15 +17,12 @@ class Bid(models.Model):
     )
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     is_winner = models.BooleanField(default=False)
+    is_auto = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        # Tie-break: among equal amounts, the earliest bid wins (first bidder
-        # to reach that price), so ``highest_for`` can just take ``.first()``.
         ordering = ['-amount', 'created_at']
         indexes = [
-            # Matches highest_for's filter+order, called on every bid-history
-            # page view and every auction close.
             models.Index(fields=['listing', '-amount', 'created_at'], name='bid_listing_amount_idx'),
         ]
 
@@ -40,3 +37,30 @@ class Bid(models.Model):
     def current_price_for(cls, listing):
         highest = cls.highest_for(listing)
         return highest.amount if highest else listing.starting_price
+
+
+class AutoBid(models.Model):
+    listing = models.ForeignKey(
+        Listing,
+        on_delete=models.CASCADE,
+        related_name='auto_bids',
+    )
+    bidder = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='auto_bids',
+    )
+    max_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['listing', 'bidder'],
+                name='one_autobid_per_bidder_per_listing',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.bidder} auto-bid up to {self.max_amount} on {self.listing}'

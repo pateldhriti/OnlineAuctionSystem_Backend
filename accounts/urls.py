@@ -15,6 +15,7 @@ urlpatterns = [
     path('password/change/', views.password_change_view, name='password_change'),
     path('dashboard/', views.seller_dashboard_view, name='dashboard'),
     path('history/', views.history_view, name='history'),
+    path('my-bids/', views.my_bids_view, name='my_bids'),
     path(
         'password/reset/',
         auth_views.PasswordResetView.as_view(

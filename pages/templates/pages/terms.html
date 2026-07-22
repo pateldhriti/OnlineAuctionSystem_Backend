@@ -1,39 +1,41 @@
 {% extends 'base.html' %}
 
-{% block title %}Terms of Service{% endblock %}
+{% block title %}Terms of Service — AuctionHub{% endblock %}
 
 {% block content %}
-    <div class="row justify-content-center">
+    <div class="row justify-content-center py-3">
         <div class="col-lg-8">
-            <h1 class="mb-4">Terms of Service</h1>
-            <p class="text-body-secondary">Last updated: {% now "F j, Y" %}</p>
+            <div class="card border-0 p-4 p-lg-5" style="border-radius:20px;">
+                <h1 class="fw-800 mb-1" style="font-weight:800;">Terms of Service</h1>
+                <p class="text-body-secondary mb-4">Last updated: {% now "F j, Y" %}</p>
 
-            <h2 class="h5 mt-4">Auctions are binding</h2>
-            <p>
-                Placing a bid is a commitment to buy at that price if you win. Listing
-                an item is a commitment to sell to the winning bidder once the auction
-                closes.
-            </p>
+                <h2 class="h5 mt-4 fw-bold" style="color:var(--primary);">Auctions are binding</h2>
+                <p style="line-height:1.8;">
+                    Placing a bid is a commitment to buy at that price if you win. Listing
+                    an item is a commitment to sell to the winning bidder once the auction
+                    closes.
+                </p>
 
-            <h2 class="h5 mt-4">Listings</h2>
-            <p>
-                Sellers are responsible for accurately describing what they're listing.
-                Set a fair starting price and a realistic end time - once bids come in,
-                a listing can't be edited or removed.
-            </p>
+                <h2 class="h5 mt-4 fw-bold" style="color:var(--primary);">Listings</h2>
+                <p style="line-height:1.8;">
+                    Sellers are responsible for accurately describing what they're listing.
+                    Set a fair starting price and a realistic end time — once bids come in,
+                    a listing can't be edited or removed.
+                </p>
 
-            <h2 class="h5 mt-4">Account conduct</h2>
-            <p>
-                One account per person. Don't bid on your own listings, don't use the
-                messaging system for anything other than talking about a listing you're
-                bidding on, and don't upload identity documents that aren't your own.
-            </p>
+                <h2 class="h5 mt-4 fw-bold" style="color:var(--primary);">Account conduct</h2>
+                <p style="line-height:1.8;">
+                    One account per person. Don't bid on your own listings, don't use the
+                    messaging system for anything other than talking about a listing you're
+                    bidding on, and don't upload identity documents that aren't your own.
+                </p>
 
-            <h2 class="h5 mt-4">Changes</h2>
-            <p>
-                We may update these terms as the platform evolves.
-                <a href="{% url 'home' %}#contact">Contact us</a> with any questions.
-            </p>
+                <h2 class="h5 mt-4 fw-bold" style="color:var(--primary);">Changes</h2>
+                <p style="line-height:1.8;">
+                    We may update these terms as the platform evolves.
+                    <a href="{% url 'home' %}#contact" class="text-decoration-none fw-semibold" style="color:var(--primary);">Contact us</a> with any questions.
+                </p>
+            </div>
         </div>
     </div>
 {% endblock %}

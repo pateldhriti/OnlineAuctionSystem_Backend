@@ -1,113 +1,187 @@
 {% extends 'base.html' %}
 
-{% block title %}Online Auction — Bid, Sell, Win{% endblock %}
+{% block title %}AuctionHub — Bid, Sell, Win{% endblock %}
 
 {% block content %}
-    <div class="p-5 mb-5 bg-dark text-white rounded-3 text-center">
-        <h1 class="display-5 fw-bold">Bid live. Sell fast. Win big.</h1>
-        <p class="col-lg-8 mx-auto fs-5 text-light">
-            Online Auction is a simple, no-fuss auction platform. List anything you own,
-            watch the bids roll in, and let the highest bidder win automatically when
-            the clock runs out — no manual bookkeeping required.
-        </p>
-        <div class="d-flex justify-content-center gap-2 mt-4">
-            <a href="{% url 'listings:list' %}" class="btn btn-primary btn-lg">Browse listings</a>
-            {% if not user.is_authenticated %}
-                <a href="{% url 'accounts:register' %}" class="btn btn-outline-light btn-lg">Get started free</a>
-            {% else %}
-                <a href="{% url 'listings:create' %}" class="btn btn-outline-light btn-lg">Create a listing</a>
-            {% endif %}
+    <!-- Hero -->
+    <div class="position-relative overflow-hidden p-4 p-md-5 text-white text-center" style="background:var(--g-hero);border-radius:var(--radius-lg);margin-bottom:3rem;">
+        <div class="position-absolute top-0 start-0 w-100 h-100" style="background:radial-gradient(circle at 25% 40%, rgba(108,92,231,.35) 0%, transparent 50%), radial-gradient(circle at 75% 70%, rgba(253,121,168,.2) 0%, transparent 50%);"></div>
+        <div class="position-relative py-4 py-md-5" style="z-index:2;">
+            <span class="badge rounded-pill px-3 py-2 mb-3" style="background:rgba(255,255,255,.1);backdrop-filter:blur(10px);color:#fff;font-size:.78rem;font-weight:600;border:1px solid rgba(255,255,255,.1);">
+                <i class="bi bi-lightning-charge-fill text-warning me-1"></i> Live auctions happening now
+            </span>
+            <h1 class="display-4 mb-3" style="font-weight:800;letter-spacing:-1.5px;">
+                Bid live. Sell fast.<br>
+                <span style="background:var(--g-accent);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Win big.</span>
+            </h1>
+            <p class="col-lg-7 mx-auto fs-5 mb-4" style="color:rgba(255,255,255,.6);font-weight:500;">
+                The modern auction platform where sellers list, bidders compete, and the highest bid wins automatically.
+            </p>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <a href="{% url 'listings:list' %}" class="btn btn-glow btn-lg px-4">
+                    <i class="bi bi-grid-3x3-gap me-2"></i>Browse Listings
+                </a>
+                {% if not user.is_authenticated %}
+                    <a href="{% url 'accounts:register' %}" class="btn btn-lg px-4" style="background:rgba(255,255,255,.08);backdrop-filter:blur(10px);color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:var(--radius-sm);font-weight:700;">
+                        Get started free <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                {% else %}
+                    <a href="{% url 'listings:create' %}" class="btn btn-lg px-4" style="background:rgba(255,255,255,.08);backdrop-filter:blur(10px);color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:var(--radius-sm);font-weight:700;">
+                        <i class="bi bi-plus-circle me-1"></i> Create a Listing
+                    </a>
+                {% endif %}
+            </div>
         </div>
+        <div class="position-absolute" style="top:12%;left:6%;width:60px;height:60px;border-radius:16px;background:rgba(255,255,255,.03);transform:rotate(25deg);border:1px solid rgba(255,255,255,.05);"></div>
+        <div class="position-absolute" style="bottom:15%;right:8%;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);"></div>
     </div>
 
+    <!-- About -->
     <div class="text-center mb-5">
-        <h2>What is Online Auction?</h2>
-        <p class="text-body-secondary col-lg-8 mx-auto">
-            A lightweight marketplace where sellers list items with a starting price and a
-            deadline, and bidders compete for the best price. When time runs out, the
-            highest bid wins automatically and both sides are notified — nothing to referee.
+        <span class="badge badge-glow rounded-pill px-3 py-2 mb-3" style="font-size:.72rem;">ABOUT US</span>
+        <h2 class="section-title mb-2">What is AuctionHub?</h2>
+        <p class="section-subtitle col-lg-7 mx-auto">
+            A lightweight marketplace where sellers list items with a starting price and a deadline, and bidders compete. When time runs out, the highest bid wins automatically.
         </p>
     </div>
 
+    <!-- Features Row 1 -->
     <div class="row row-cols-1 row-cols-md-3 g-4 mb-5">
-        <div class="col">
-            <div class="card h-100 shadow-sm text-center">
+        <div class="col fade-up">
+            <div class="card h-100 text-center p-4 border-0">
                 <div class="card-body">
-                    <h3 class="h5 card-title">Live bidding</h3>
-                    <p class="card-text text-body-secondary">
-                        See the current highest bid and countdown update in real time on every listing.
-                    </p>
+                    <div class="icon-box icon-box-lg icon-box-primary mx-auto mb-3">
+                        <i class="bi bi-lightning-charge-fill"></i>
+                    </div>
+                    <h5 class="fw-800 mb-2">Live Bidding</h5>
+                    <p class="text-body-secondary small mb-0">See the current highest bid and countdown update in real time on every listing.</p>
                 </div>
             </div>
         </div>
-        <div class="col">
-            <div class="card h-100 shadow-sm text-center">
+        <div class="col fade-up">
+            <div class="card h-100 text-center p-4 border-0">
                 <div class="card-body">
-                    <h3 class="h5 card-title">Automatic winners</h3>
-                    <p class="card-text text-body-secondary">
-                        Auctions close themselves on schedule and pick the highest bidder — no
-                        manual work, and ties are broken fairly by whoever bid first.
-                    </p>
+                    <div class="icon-box icon-box-lg icon-box-success mx-auto mb-3">
+                        <i class="bi bi-trophy-fill"></i>
+                    </div>
+                    <h5 class="fw-800 mb-2">Automatic Winners</h5>
+                    <p class="text-body-secondary small mb-0">Auctions close on schedule and pick the highest bidder — no manual work required.</p>
                 </div>
             </div>
         </div>
-        <div class="col">
-            <div class="card h-100 shadow-sm text-center">
+        <div class="col fade-up">
+            <div class="card h-100 text-center p-4 border-0">
                 <div class="card-body">
-                    <h3 class="h5 card-title">Direct messaging</h3>
-                    <p class="card-text text-body-secondary">
-                        Bidders and sellers can message each other privately about any listing
-                        they're bidding on.
-                    </p>
+                    <div class="icon-box icon-box-lg icon-box-accent mx-auto mb-3">
+                        <i class="bi bi-chat-heart-fill"></i>
+                    </div>
+                    <h5 class="fw-800 mb-2">Direct Messaging</h5>
+                    <p class="text-body-secondary small mb-0">Bidders and sellers can message each other privately about any listing.</p>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Features Row 2 -->
+    <div class="row row-cols-2 row-cols-md-4 g-3 mb-5">
+        <div class="col fade-up">
+            <div class="card h-100 text-center p-3 border-0">
+                <div class="card-body">
+                    <div class="icon-box icon-box-md icon-box-warning mx-auto mb-2"><i class="bi bi-robot"></i></div>
+                    <h6 class="fw-800 mb-1" style="font-size:.85rem;">Auto-Bid</h6>
+                    <p class="text-body-secondary mb-0" style="font-size:.75rem;">Set a max, we bid for you</p>
+                </div>
+            </div>
+        </div>
+        <div class="col fade-up">
+            <div class="card h-100 text-center p-3 border-0">
+                <div class="card-body">
+                    <div class="icon-box icon-box-md icon-box-danger mx-auto mb-2"><i class="bi bi-bell-fill"></i></div>
+                    <h6 class="fw-800 mb-1" style="font-size:.85rem;">Notifications</h6>
+                    <p class="text-body-secondary mb-0" style="font-size:.75rem;">Instant alerts for bids & wins</p>
+                </div>
+            </div>
+        </div>
+        <div class="col fade-up">
+            <div class="card h-100 text-center p-3 border-0">
+                <div class="card-body">
+                    <div class="icon-box icon-box-md icon-box-primary mx-auto mb-2"><i class="bi bi-shield-check"></i></div>
+                    <h6 class="fw-800 mb-1" style="font-size:.85rem;">Snipe Guard</h6>
+                    <p class="text-body-secondary mb-0" style="font-size:.75rem;">Last-second bids extend time</p>
+                </div>
+            </div>
+        </div>
+        <div class="col fade-up">
+            <div class="card h-100 text-center p-3 border-0">
+                <div class="card-body">
+                    <div class="icon-box icon-box-md icon-box-success mx-auto mb-2"><i class="bi bi-star-fill"></i></div>
+                    <h6 class="fw-800 mb-1" style="font-size:.85rem;">Reviews</h6>
+                    <p class="text-body-secondary mb-0" style="font-size:.75rem;">Rate your transactions</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- How it works -->
     <div class="mb-5">
-        <h2 class="text-center mb-4">How it works</h2>
+        <div class="text-center mb-4">
+            <span class="badge badge-glow rounded-pill px-3 py-2 mb-3" style="font-size:.72rem;">HOW IT WORKS</span>
+            <h2 class="section-title">Three simple steps</h2>
+        </div>
         <div class="row row-cols-1 row-cols-md-3 g-4 text-center">
-            <div class="col">
-                <div class="fs-2 fw-bold text-primary mb-2">1</div>
-                <h3 class="h6">Create a listing</h3>
-                <p class="text-body-secondary small">Set a title, description, starting price, and how long the auction runs.</p>
+            <div class="col fade-up">
+                <div class="card border-0 p-4">
+                    <div class="card-body">
+                        <div class="avatar avatar-lg avatar-circle mx-auto mb-3" style="background:var(--g-primary);">1</div>
+                        <h5 class="fw-800">Create a Listing</h5>
+                        <p class="text-body-secondary small mb-0">Set a title, description, starting price, and auction duration.</p>
+                    </div>
+                </div>
             </div>
-            <div class="col">
-                <div class="fs-2 fw-bold text-primary mb-2">2</div>
-                <h3 class="h6">Bids come in</h3>
-                <p class="text-body-secondary small">Bidders compete, each new bid raising the current price.</p>
+            <div class="col fade-up">
+                <div class="card border-0 p-4">
+                    <div class="card-body">
+                        <div class="avatar avatar-lg avatar-circle mx-auto mb-3" style="background:var(--g-accent);">2</div>
+                        <h5 class="fw-800">Bids Come In</h5>
+                        <p class="text-body-secondary small mb-0">Bidders compete, each new bid raising the current price.</p>
+                    </div>
+                </div>
             </div>
-            <div class="col">
-                <div class="fs-2 fw-bold text-primary mb-2">3</div>
-                <h3 class="h6">Highest bid wins</h3>
-                <p class="text-body-secondary small">When time's up, the top bidder wins and both sides get notified.</p>
+            <div class="col fade-up">
+                <div class="card border-0 p-4">
+                    <div class="card-body">
+                        <div class="avatar avatar-lg avatar-circle mx-auto mb-3" style="background:var(--g-success);">3</div>
+                        <h5 class="fw-800">Highest Bid Wins</h5>
+                        <p class="text-body-secondary small mb-0">When time's up, the top bidder wins and both sides get notified.</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- Contact -->
     <div id="contact" class="row justify-content-center">
         <div class="col-lg-6">
-            <div class="card shadow-sm">
-                <div class="card-body p-4">
-                    <h2 class="h4 card-title mb-1">Contact us</h2>
-                    <p class="text-body-secondary">Questions, feedback, or an issue with a listing? Send us a note.</p>
-                    <form method="post" action="{% url 'contact' %}" novalidate>
-                        {% csrf_token %}
-                        {% if contact_form.non_field_errors %}
-                            <div class="alert alert-danger">{{ contact_form.non_field_errors }}</div>
-                        {% endif %}
-                        {% for field in contact_form %}
-                            <div class="mb-3">
-                                <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                                {{ field }}
-                                {% if field.errors %}
-                                    <div class="text-danger small mt-1">{{ field.errors|striptags }}</div>
-                                {% endif %}
-                            </div>
-                        {% endfor %}
-                        <button type="submit" class="btn btn-primary w-100">Send message</button>
-                    </form>
+            <div class="card border-0 p-4 p-lg-5">
+                <div class="text-center mb-4">
+                    <div class="icon-box icon-box-lg icon-box-primary mx-auto mb-3"><i class="bi bi-envelope-fill"></i></div>
+                    <h2 class="h4 fw-800 mb-1">Get in Touch</h2>
+                    <p class="section-subtitle">Questions or feedback? We'd love to hear from you.</p>
                 </div>
+                <form method="post" action="{% url 'contact' %}" novalidate>
+                    {% csrf_token %}
+                    {% if contact_form.non_field_errors %}
+                        <div class="alert alert-danger border-0">{{ contact_form.non_field_errors }}</div>
+                    {% endif %}
+                    {% for field in contact_form %}
+                        <div class="mb-3">
+                            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors|striptags }}</div>{% endif %}
+                        </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-glow w-100 py-2"><i class="bi bi-send me-1"></i> Send Message</button>
+                </form>
             </div>
         </div>
     </div>

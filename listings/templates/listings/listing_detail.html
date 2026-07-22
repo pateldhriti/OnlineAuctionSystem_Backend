@@ -1,75 +1,101 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{{ listing.title }}{% endblock %}
+{% block title %}{{ listing.title }} — AuctionHub{% endblock %}
 
 {% block content %}
     <div data-live-listing-url="{% url 'listings:detail' listing.pk %}">
-        <div class="d-flex justify-content-between align-items-start mb-4">
-            <div>
-                <a class="small text-decoration-none" href="{% url 'listings:list' %}">Back to listings</a>
-                <h2 class="mb-1">{{ listing.title }}</h2>
-                <p class="text-body-secondary mb-0">
-                    Seller: {{ listing.seller.username }} &middot; {{ listing.get_category_display }}
-                </p>
-            </div>
-            {% if is_open %}
-                <span class="badge text-bg-success" data-listing-status>Active</span>
-            {% else %}
-                <span class="badge text-bg-secondary" data-listing-status>Closed</span>
-            {% endif %}
-        </div>
+        <a class="d-inline-flex align-items-center text-decoration-none mb-3 small fw-semibold" href="{% url 'listings:list' %}" style="color:var(--primary);">
+            <i class="bi bi-arrow-left me-1"></i> Back to listings
+        </a>
 
         <div class="row g-4">
+            <!-- Left Column -->
             <div class="col-lg-7">
-                {% if listing.image %}
-                    <img class="img-fluid rounded border bg-white mb-3" src="{{ listing.image.url }}" alt="{{ listing.title }}">
-                {% endif %}
-                <div class="bg-white border rounded p-4">
-                    <h5>Description</h5>
-                    <p class="mb-0">{{ listing.description }}</p>
+                <div class="card border-0 p-0 overflow-hidden" style="border-radius:20px;">
+                    {% if listing.image %}
+                        <img class="w-100" src="{{ listing.image.url }}" alt="{{ listing.title }}" style="max-height:400px;object-fit:cover;">
+                    {% else %}
+                        <div class="d-flex align-items-center justify-content-center" style="height:280px;background:rgba(108,92,231,.08);">
+                            <i class="bi bi-box-seam" style="font-size:4rem;color:var(--primary);opacity:.5;"></i>
+                        </div>
+                    {% endif %}
+                    <div class="p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h2 class="fw-800 mb-0" style="font-weight:800;">{{ listing.title }}</h2>
+                            {% if is_open %}
+                                <span class="badge badge-glow-success px-3 py-2" data-listing-status>Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary px-3 py-2" data-listing-status>Closed</span>
+                            {% endif %}
+                        </div>
+                        <div class="d-flex align-items-center gap-2 mb-3">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:28px;height:28px;background:var(--primary-gradient);color:#fff;font-size:.7rem;font-weight:700;">
+                                {{ listing.seller.username|first|upper }}
+                            </div>
+                            <span class="text-body-secondary small">{{ listing.seller.username }}</span>
+                            <span class="text-body-secondary small">&middot;</span>
+                            <span class="badge bg-light text-dark" style="font-size:.75rem;">{{ listing.get_category_display }}</span>
+                        </div>
+                        <h6 class="fw-bold text-body-secondary text-uppercase small mb-2" style="letter-spacing:.5px;">Description</h6>
+                        <p class="mb-0" style="line-height:1.7;">{{ listing.description }}</p>
+                    </div>
                 </div>
             </div>
 
+            <!-- Right Column -->
             <div class="col-lg-5">
-                <div class="card shadow-sm mb-3">
-                    <div class="card-body">
-                        <p class="text-body-secondary mb-1">Current highest bid</p>
-                        <p class="display-6 fw-semibold text-primary mb-1" data-current-price>${{ current_price }}</p>
+                <!-- Price Card -->
+                <div class="card border-0 mb-3 overflow-hidden" style="border-radius:20px;">
+                    <div class="p-4" style="background:var(--primary-gradient);">
+                        <p class="mb-1 small" style="color:rgba(255,255,255,.75);">Current highest bid</p>
+                        <p class="display-5 fw-800 text-white mb-1" style="font-weight:800;" data-current-price>${{ current_price }}</p>
                         {% if highest_bid %}
-                            <p class="mb-0">
-                                Leading bidder:
-                                <span class="fw-semibold" data-leading-bidder>{{ highest_bid.bidder.username }}</span>
-                            </p>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:24px;height:24px;background:rgba(255,255,255,.2);color:#fff;font-size:.65rem;font-weight:700;">
+                                    {{ highest_bid.bidder.username|first|upper }}
+                                </div>
+                                <span style="color:rgba(255,255,255,.85);font-size:.9rem;" data-leading-bidder>{{ highest_bid.bidder.username }}</span>
+                            </div>
                         {% else %}
-                            <p class="mb-0 text-body-secondary" data-leading-bidder>No bids yet</p>
+                            <p class="mb-0" style="color:rgba(255,255,255,.7);" data-leading-bidder>No bids yet</p>
                         {% endif %}
-                        <p class="small text-body-secondary mt-2 mb-0" data-bid-count>
-                            {{ bid_count }} bid{{ bid_count|pluralize }}
-                        </p>
+                    </div>
+                    <div class="p-3 d-flex justify-content-between align-items-center" style="background:rgba(102,126,234,.08);">
+                        <span class="small fw-semibold text-body-secondary" data-bid-count>
+                            <i class="bi bi-hammer me-1"></i>{{ bid_count }} bid{{ bid_count|pluralize }}
+                        </span>
+                        <span class="small fw-semibold text-body-secondary">
+                            <i class="bi bi-calendar-event me-1"></i>{{ listing.created_at|date:"M d, Y" }}
+                        </span>
                     </div>
                 </div>
 
-                <div class="card shadow-sm mb-3">
-                    <div class="card-body">
-                        <p class="text-body-secondary mb-1">Time remaining</p>
-                        {% if listing.ends_at %}
-                            <p class="fs-4 fw-semibold mb-0" data-ends-at="{{ listing.ends_at|date:'c' }}">Loading...</p>
-                        {% else %}
-                            <p class="fs-4 fw-semibold mb-0">No end time set</p>
-                        {% endif %}
+                <!-- Timer Card -->
+                <div class="card border-0 mb-3" style="border-radius:16px;">
+                    <div class="card-body d-flex align-items-center gap-3 py-3">
+                        <div class="d-flex align-items-center justify-content-center" style="width:48px;height:48px;border-radius:14px;background:rgba(243,156,18,.12);flex-shrink:0;">
+                            <i class="bi bi-clock-fill" style="font-size:1.2rem;color:var(--warning);"></i>
+                        </div>
+                        <div>
+                            <p class="text-body-secondary small mb-0">Time remaining</p>
+                            {% if listing.ends_at %}
+                                <p class="fs-5 fw-bold mb-0" data-ends-at="{{ listing.ends_at|date:'c' }}">Loading...</p>
+                            {% else %}
+                                <p class="fs-5 fw-bold mb-0">No end time set</p>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
 
-                <div class="d-grid gap-2">
-                    <a class="btn btn-primary" href="{% url 'bids:history' listing.pk %}">
-                        {% if is_open and user.is_authenticated and listing.seller_id != user.pk %}
-                            Place bid
-                        {% else %}
-                            View bids
-                        {% endif %}
-                    </a>
-                </div>
+                <!-- Action Button -->
+                <a class="btn btn-glow btn-lg w-100 py-3" href="{% url 'bids:history' listing.pk %}" style="font-size:1rem;">
+                    {% if is_open and user.is_authenticated and listing.seller_id != user.pk %}
+                        <i class="bi bi-hammer me-1"></i> Place a Bid
+                    {% else %}
+                        <i class="bi bi-eye me-1"></i> View Bids
+                    {% endif %}
+                </a>
             </div>
         </div>
     </div>

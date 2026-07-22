@@ -1,85 +1,110 @@
 {% extends 'base.html' %}
 
-{% block title %}Listings{% endblock %}
+{% block title %}Listings — AuctionHub{% endblock %}
 
 {% block content %}
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0">Live Listings</h2>
+    <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <h2><i class="bi bi-grid-3x3-gap me-2"></i>Live Listings</h2>
+            <p class="mb-0" style="opacity:.75;font-size:.9rem;">Discover items and start bidding</p>
+        </div>
         {% if user.is_authenticated %}
-            <a class="btn btn-primary" href="{% url 'listings:create' %}">+ New listing</a>
+            <a class="btn btn-light fw-bold px-4" href="{% url 'listings:create' %}" style="border-radius:var(--radius-sm);">
+                <i class="bi bi-plus-circle me-1"></i> New Listing
+            </a>
         {% endif %}
     </div>
 
-    <form method="get" action="{% url 'listings:list' %}" class="row g-2 mb-4">
-        <div class="col-sm-6">
-            <input
-                type="search" name="q" class="form-control" placeholder="Search listings by title or description…"
-                value="{{ query }}" aria-label="Search listings"
-            >
-        </div>
-        <div class="col-sm-4">
-            <select name="category" class="form-select" aria-label="Filter by category" onchange="this.form.requestSubmit()">
-                <option value="">All categories</option>
-                {% for value, label in categories %}
-                    <option value="{{ value }}" {% if value == active_category %}selected{% endif %}>{{ label }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="col-sm-2">
-            <button type="submit" class="btn btn-primary w-100">Search</button>
-        </div>
-        {% if query or active_category %}
-            <div class="col-12">
-                <a href="{% url 'listings:list' %}" class="small">Clear search</a>
+    <form method="get" action="{% url 'listings:list' %}" class="card border-0 p-3 mb-4">
+        <div class="row g-2 align-items-end">
+            <div class="col-sm-6">
+                <div class="position-relative">
+                    <i class="bi bi-search position-absolute" style="left:14px;top:50%;transform:translateY(-50%);color:#bbb;"></i>
+                    <input type="search" name="q" class="form-control ps-5" placeholder="Search listings…" value="{{ query }}">
+                </div>
             </div>
-        {% endif %}
+            <div class="col-sm-4">
+                <select name="category" class="form-select" onchange="this.form.requestSubmit()">
+                    <option value="">All categories</option>
+                    {% for value, label in categories %}
+                        <option value="{{ value }}" {% if value == active_category %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-sm-2">
+                <button type="submit" class="btn btn-glow w-100">Search</button>
+            </div>
+            {% if query or active_category %}
+                <div class="col-12"><a href="{% url 'listings:list' %}" class="small text-decoration-none text-primary-custom"><i class="bi bi-x-circle me-1"></i>Clear</a></div>
+            {% endif %}
+        </div>
     </form>
 
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
         {% for listing in listings %}
-            <div class="col">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <h5 class="card-title mb-0">
-                                <a class="link-dark text-decoration-none" href="{% url 'listings:detail' listing.pk %}">
-                                    {{ listing.title }}
-                                </a>
-                            </h5>
+            <div class="col fade-up">
+                <div class="listing-card card h-100">
+                    <div class="card-img-top-area">
+                        {% if listing.thumbnail %}
+                            <img src="{{ listing.thumbnail.url }}" alt="{{ listing.title }}">
+                        {% elif listing.image %}
+                            <img src="{{ listing.image.url }}" alt="{{ listing.title }}">
+                        {% else %}
+                            <div class="placeholder-icon"><i class="bi bi-box-seam"></i></div>
+                        {% endif %}
+                        <div class="status-badge">
                             {% if listing.is_active %}
-                                <span class="badge text-bg-success">Active</span>
+                                <span class="badge badge-glow-success">Active</span>
                             {% else %}
-                                <span class="badge text-bg-secondary">Closed</span>
+                                <span class="badge bg-secondary">Closed</span>
                             {% endif %}
                         </div>
-                        {% if listing.highest_bid_amount %}
-                            <p class="fs-5 fw-semibold text-primary mb-2">Highest bid: ${{ listing.highest_bid_amount|floatformat:2 }}</p>
-                        {% else %}
-                            <p class="fs-5 fw-semibold text-primary mb-2">Starting price: ${{ listing.starting_price }}</p>
-                        {% endif %}
+                        <div class="price-chip shimmer">
+                            {% if listing.highest_bid_amount %}
+                                ${{ listing.highest_bid_amount|floatformat:2 }}
+                            {% else %}
+                                ${{ listing.starting_price }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="fw-800 mb-2" style="font-size:.95rem;">
+                            <a class="text-dark text-decoration-none" href="{% url 'listings:detail' listing.pk %}">{{ listing.title }}</a>
+                        </h5>
                         {% if listing.ends_at %}
-                            <p class="small text-body-secondary mb-2">
-                                Ends in <span data-ends-at="{{ listing.ends_at|date:'c' }}">...</span>
+                            <p class="small mb-2 d-flex align-items-center gap-1 text-body-secondary">
+                                <i class="bi bi-clock"></i>
+                                <span data-ends-at="{{ listing.ends_at|date:'c' }}">...</span>
                             </p>
                         {% endif %}
-                        <p class="card-text text-body-secondary">{{ listing.description|truncatechars:120 }}</p>
+                        <p class="text-body-secondary mb-0" style="font-size:.82rem;line-height:1.5;">{{ listing.description|truncatechars:80 }}</p>
                     </div>
-                    <div class="card-footer bg-transparent d-flex justify-content-between small text-body-secondary">
-                        <span>Seller: {{ listing.seller.username }}</span>
-                        <span>{{ listing.created_at|date:"M d, Y" }}</span>
+                    <div class="card-footer bg-transparent border-0 pt-0 pb-3 px-3">
+                        <div class="d-flex justify-content-between align-items-center small text-body-secondary mb-2">
+                            <span class="d-flex align-items-center gap-1">
+                                <span class="avatar avatar-sm avatar-circle" style="width:22px;height:22px;font-size:.55rem;">{{ listing.seller.username|first|upper }}</span>
+                                {{ listing.seller.username }}
+                            </span>
+                            <span>{{ listing.created_at|date:"M d" }}</span>
+                        </div>
+                        <a href="{% url 'bids:history' listing.pk %}" class="btn btn-glow btn-sm w-100">
+                            <i class="bi bi-hammer me-1"></i> View & Bid
+                        </a>
                     </div>
-                    <a href="{% url 'bids:history' listing.pk %}" class="btn btn-outline-primary btn-sm m-2">View bids</a>
                 </div>
             </div>
         {% empty %}
             <div class="col-12">
-                <div class="alert alert-secondary text-center py-5 mb-0">
+                <div class="card border-0 empty-state">
                     {% if query or active_category %}
-                        <h5 class="mb-1">No listings match your search</h5>
-                        <p class="mb-0">Try a different keyword or category.</p>
+                        <i class="bi bi-search empty-icon"></i>
+                        <h5 class="fw-800">No listings match your search</h5>
+                        <p class="text-body-secondary">Try a different keyword or category.</p>
                     {% else %}
-                        <h5 class="mb-1">No listings yet</h5>
-                        <p class="mb-0">Be the first to put something up for auction.</p>
+                        <i class="bi bi-box-seam empty-icon"></i>
+                        <h5 class="fw-800">No listings yet</h5>
+                        <p class="text-body-secondary mb-3">Be the first to put something up for auction.</p>
+                        <a href="{% url 'listings:create' %}" class="btn btn-glow">Create Listing</a>
                     {% endif %}
                 </div>
             </div>
@@ -87,23 +112,21 @@
     </div>
 
     {% if page_obj.paginator.num_pages > 1 %}
-        <nav class="mt-4" aria-label="Listings pages">
-            <ul class="pagination justify-content-center">
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center gap-1">
                 <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
                     {% if page_obj.has_previous %}
-                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query|urlencode }}{% endif %}{% if active_category %}&category={{ active_category }}{% endif %}">Previous</a>
+                        <a class="page-link border-0 fw-semibold" style="border-radius:10px;" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query|urlencode }}{% endif %}{% if active_category %}&category={{ active_category }}{% endif %}"><i class="bi bi-chevron-left"></i> Prev</a>
                     {% else %}
-                        <span class="page-link">Previous</span>
+                        <span class="page-link border-0" style="border-radius:10px;"><i class="bi bi-chevron-left"></i> Prev</span>
                     {% endif %}
                 </li>
-                <li class="page-item disabled">
-                    <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
-                </li>
+                <li class="page-item disabled"><span class="page-link border-0 fw-bold" style="border-radius:10px;">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
                 <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
                     {% if page_obj.has_next %}
-                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query|urlencode }}{% endif %}{% if active_category %}&category={{ active_category }}{% endif %}">Next</a>
+                        <a class="page-link border-0 fw-semibold" style="border-radius:10px;" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query|urlencode }}{% endif %}{% if active_category %}&category={{ active_category }}{% endif %}">Next <i class="bi bi-chevron-right"></i></a>
                     {% else %}
-                        <span class="page-link">Next</span>
+                        <span class="page-link border-0" style="border-radius:10px;">Next <i class="bi bi-chevron-right"></i></span>
                     {% endif %}
                 </li>
             </ul>

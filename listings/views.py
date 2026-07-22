@@ -1,5 +1,12 @@
+import base64
+import io
+import json
+
+from PIL import Image as PILImage
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.paginator import Paginator
 from django.db.models import Max, Q
 from django.http import JsonResponse
@@ -13,6 +20,34 @@ from bids.models import Bid
 
 from .forms import ListingForm
 from .models import Listing
+
+THUMBNAIL_SIZE = (640, 360)
+
+
+def _make_thumbnail(image_field, crop_data_json):
+    """Crop the uploaded image according to crop_data and save as thumbnail."""
+    try:
+        crop = json.loads(crop_data_json)
+        x = int(crop['x'])
+        y = int(crop['y'])
+        w = int(crop['width'])
+        h = int(crop['height'])
+    except (json.JSONDecodeError, KeyError, TypeError, ValueError):
+        return None
+
+    img = PILImage.open(image_field)
+    img = img.convert('RGB')
+    cropped = img.crop((x, y, x + w, y + h))
+    cropped.thumbnail(THUMBNAIL_SIZE, PILImage.LANCZOS)
+
+    buf = io.BytesIO()
+    cropped.save(buf, format='JPEG', quality=85)
+    buf.seek(0)
+    return SimpleUploadedFile(
+        f'thumb_{image_field.name}',
+        buf.read(),
+        content_type='image/jpeg',
+    )
 
 
 def get_safe_redirect_url(request, fallback_url):
@@ -141,6 +176,11 @@ def create_listing(request):
             listing = form.save(commit=False)
             listing.seller = request.user
             listing.save()
+            crop_data = request.POST.get('crop_data')
+            if crop_data and listing.image:
+                thumb = _make_thumbnail(listing.image, crop_data)
+                if thumb:
+                    listing.thumbnail.save(thumb.name, thumb, save=True)
             messages.success(request, 'Listing created successfully.')
             return redirect('listings:detail', pk=listing.pk)
     else:
@@ -162,7 +202,12 @@ def update_listing(request, pk):
     if request.method == 'POST':
         form = ListingForm(request.POST, request.FILES, instance=listing)
         if form.is_valid():
-            form.save()
+            listing = form.save()
+            crop_data = request.POST.get('crop_data')
+            if crop_data and listing.image:
+                thumb = _make_thumbnail(listing.image, crop_data)
+                if thumb:
+                    listing.thumbnail.save(thumb.name, thumb, save=True)
             messages.success(request, 'Listing updated successfully.')
             return redirect('listings:detail', pk=listing.pk)
     else:

@@ -1,0 +1,297 @@
+{% extends 'base.html' %}
+
+{% block title %}My Bids — AuctionHub{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <h2><i class="bi bi-trophy me-2"></i>My Bids</h2>
+    <p class="mb-0" style="opacity:.8;font-size:.95rem;">Track your auctions and wins</p>
+</div>
+
+<!-- Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3 fade-up">
+        <div class="stat-card p-3 text-center" style="background:var(--primary-gradient);">
+            <div class="stat-number">{{ active_count }}</div>
+            <div class="stat-label">Active</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3 fade-up">
+        <div class="stat-card p-3 text-center" style="background:var(--success-gradient);">
+            <div class="stat-number">{{ won_count }}</div>
+            <div class="stat-label">Won</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3 fade-up">
+        <div class="stat-card p-3 text-center" style="background:var(--danger-gradient);">
+            <div class="stat-number">{{ lost_count }}</div>
+            <div class="stat-label">Lost</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3 fade-up">
+        <div class="stat-card p-3 text-center" style="background:var(--warning-gradient);">
+            <div class="stat-number">{{ watchlist_count }}</div>
+            <div class="stat-label">Watchlist</div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabs -->
+<ul class="nav nav-tabs-modern mb-4" role="tablist">
+    <li class="nav-item">
+        <a class="nav-link {% if tab == 'active' %}active{% endif %}" href="?tab=active">
+            <i class="bi bi-lightning-charge me-1"></i> Active <span class="badge {% if tab == 'active' %}bg-white text-dark{% else %}bg-primary{% endif %} ms-1">{{ active_count }}</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if tab == 'won' %}active{% endif %}" href="?tab=won">
+            <i class="bi bi-trophy me-1"></i> Won <span class="badge {% if tab == 'won' %}bg-white text-dark{% else %}bg-success{% endif %} ms-1">{{ won_count }}</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if tab == 'lost' %}active{% endif %}" href="?tab=lost">
+            <i class="bi bi-x-circle me-1"></i> Lost <span class="badge {% if tab == 'lost' %}bg-white text-dark{% else %}bg-danger{% endif %} ms-1">{{ lost_count }}</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if tab == 'watchlist' %}active{% endif %}" href="?tab=watchlist">
+            <i class="bi bi-heart me-1"></i> Watchlist <span class="badge {% if tab == 'watchlist' %}bg-white text-dark{% else %}bg-warning text-dark{% endif %} ms-1">{{ watchlist_count }}</span>
+        </a>
+    </li>
+</ul>
+
+<!-- Active Bids -->
+{% if tab == 'active' %}
+    {% if active_bids %}
+        <div class="card border-0" style="border-radius:20px;">
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Listing</th>
+                            <th>Seller</th>
+                            <th>My Bid</th>
+                            <th>Current</th>
+                            <th>Bids</th>
+                            <th>Status</th>
+                            <th>Ends In</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in active_bids %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'listings:detail' row.listing.pk %}" class="text-decoration-none fw-semibold text-dark">
+                                        {{ row.listing.title }}
+                                    </a>
+                                </td>
+                                <td class="text-body-secondary">{{ row.listing.seller.username }}</td>
+                                <td class="fw-bold" style="color:var(--primary);">${{ row.my_max_bid }}</td>
+                                <td class="fw-semibold">${{ row.current_price }}</td>
+                                <td><span class="badge bg-light text-dark">{{ row.bid_count }}</span></td>
+                                <td>
+                                    {% if row.is_leading %}
+                                        <span class="badge badge-glow-success"><i class="bi bi-check-circle me-1"></i>Leading</span>
+                                    {% else %}
+                                        <span class="badge badge-glow-warning"><i class="bi bi-exclamation-circle me-1"></i>Outbid</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if row.listing.ends_at %}
+                                        <span class="small" data-ends-at="{{ row.listing.ends_at|date:'c' }}">...</span>
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'bids:history' row.listing.pk %}" class="btn btn-glow btn-sm">Bid</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% else %}
+        <div class="card border-0 empty-state" style="border-radius:20px;">
+            <i class="bi bi-lightning-charge"></i>
+            <h5 class="fw-bold">No active bids yet</h5>
+            <p class="text-body-secondary mb-3">Start bidding on items you love</p>
+            <a href="{% url 'listings:list' %}" class="btn btn-glow">Browse Listings</a>
+        </div>
+    {% endif %}
+{% endif %}
+
+<!-- Won Bids -->
+{% if tab == 'won' %}
+    {% if won_bids %}
+        <div class="row row-cols-1 row-cols-md-2 g-4">
+            {% for row in won_bids %}
+                <div class="col fade-up">
+                    <div class="card border-0 h-100 overflow-hidden" style="border-radius:20px;">
+                        <div class="p-3 d-flex justify-content-between align-items-center" style="background:var(--success-gradient);">
+                            <span class="fw-bold text-white">
+                                <i class="bi bi-trophy-fill me-1"></i> {{ row.listing.title }}
+                            </span>
+                            <span class="badge bg-white text-success fw-bold">${{ row.my_max_bid }}</span>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="row mb-3">
+                                <div class="col-6">
+                                    <small class="text-body-secondary text-uppercase" style="font-size:.7rem;letter-spacing:.5px;">Winning Bid</small>
+                                    <div class="fs-5 fw-800" style="color:var(--success);font-weight:800;">${{ row.my_max_bid }}</div>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-body-secondary text-uppercase" style="font-size:.7rem;letter-spacing:.5px;">Category</small>
+                                    <div class="fw-semibold">{{ row.listing.get_category_display }}</div>
+                                </div>
+                            </div>
+
+                            <h6 class="fw-bold small text-uppercase mb-2" style="letter-spacing:.5px;color:#6c757d;">
+                                <i class="bi bi-person-lines-fill me-1"></i> Seller Contact
+                            </h6>
+                            <div class="p-3 rounded-3" style="background:#f8f9fa;">
+                                <div class="d-flex align-items-center mb-2">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width:30px;height:30px;background:var(--primary-gradient);color:#fff;font-size:.7rem;font-weight:700;">
+                                        {{ row.seller_contact.name|first|upper }}
+                                    </div>
+                                    <span class="fw-semibold">{{ row.seller_contact.name }}</span>
+                                </div>
+                                {% if row.seller_contact.email %}
+                                    <div class="d-flex align-items-center mb-1 small">
+                                        <i class="bi bi-envelope-fill me-2" style="color:var(--primary);"></i>
+                                        <a href="mailto:{{ row.seller_contact.email }}" class="text-decoration-none">{{ row.seller_contact.email }}</a>
+                                    </div>
+                                {% endif %}
+                                {% if row.seller_contact.phone %}
+                                    <div class="d-flex align-items-center small">
+                                        <i class="bi bi-telephone-fill me-2" style="color:var(--primary);"></i>
+                                        <a href="tel:{{ row.seller_contact.phone }}" class="text-decoration-none">{{ row.seller_contact.phone }}</a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent border-0 p-3 pt-0 d-flex gap-2">
+                            <a href="{% url 'conversations:detail' row.conversation_id %}" class="btn btn-glow-success btn-sm flex-fill">
+                                <i class="bi bi-chat-dots-fill me-1"></i> Chat
+                            </a>
+                            <a href="{% url 'reviews:leave_review' row.listing.pk %}" class="btn btn-glow-warning btn-sm flex-fill">
+                                <i class="bi bi-star-fill me-1"></i> Review
+                            </a>
+                            <a href="{% url 'listings:detail' row.listing.pk %}" class="btn btn-outline-secondary btn-sm flex-fill" style="border-radius:10px;">View</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="card border-0 empty-state" style="border-radius:20px;">
+            <i class="bi bi-trophy"></i>
+            <h5 class="fw-bold">No auctions won yet</h5>
+            <p class="text-body-secondary mb-3">Keep bidding — your win is coming!</p>
+            <a href="{% url 'listings:list' %}" class="btn btn-glow">Browse Listings</a>
+        </div>
+    {% endif %}
+{% endif %}
+
+<!-- Lost Bids -->
+{% if tab == 'lost' %}
+    {% if lost_bids %}
+        <div class="card border-0" style="border-radius:20px;">
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Listing</th>
+                            <th>Seller</th>
+                            <th>My Bid</th>
+                            <th>Winning Price</th>
+                            <th>Category</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in lost_bids %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'listings:detail' row.listing.pk %}" class="text-decoration-none fw-semibold text-dark">
+                                        {{ row.listing.title }}
+                                    </a>
+                                </td>
+                                <td class="text-body-secondary">{{ row.listing.seller.username }}</td>
+                                <td class="text-danger fw-bold">${{ row.my_max_bid }}</td>
+                                <td class="fw-semibold">${{ row.current_price }}</td>
+                                <td><span class="badge bg-light text-dark">{{ row.listing.get_category_display }}</span></td>
+                                <td>
+                                    <a href="{% url 'bids:history' row.listing.pk %}" class="btn btn-outline-secondary btn-sm" style="border-radius:10px;">Details</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% else %}
+        <div class="card border-0 empty-state" style="border-radius:20px;">
+            <i class="bi bi-emoji-smile"></i>
+            <h5 class="fw-bold">No lost auctions</h5>
+            <p class="text-body-secondary">You're on a winning streak!</p>
+        </div>
+    {% endif %}
+{% endif %}
+
+<!-- Watchlist -->
+{% if tab == 'watchlist' %}
+    {% if watchlist %}
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            {% for listing in watchlist %}
+                <div class="col fade-up">
+                    <div class="card listing-card h-100">
+                        <div class="card-img-placeholder" style="height:120px;">
+                            <i class="bi bi-heart-fill" style="font-size:1.8rem;color:var(--danger);"></i>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="fw-bold mb-0">
+                                    <a class="text-dark text-decoration-none" href="{% url 'listings:detail' listing.pk %}">{{ listing.title }}</a>
+                                </h6>
+                                {% if listing.is_active and not listing.has_ended %}
+                                    <span class="badge badge-glow-success" style="font-size:.65rem;">Active</span>
+                                {% else %}
+                                    <span class="badge bg-secondary" style="font-size:.65rem;">Ended</span>
+                                {% endif %}
+                            </div>
+                            <span class="price-tag mb-2">${{ listing.starting_price }}</span>
+                            {% if listing.ends_at %}
+                                <p class="small text-body-secondary mb-1 mt-2">
+                                    <i class="bi bi-clock me-1"></i><span data-ends-at="{{ listing.ends_at|date:'c' }}">...</span>
+                                </p>
+                            {% endif %}
+                            <p class="text-body-secondary small mb-0">{{ listing.description|truncatechars:80 }}</p>
+                        </div>
+                        <div class="card-footer bg-transparent border-0 pb-3 px-3 d-flex gap-2">
+                            <a href="{% url 'bids:history' listing.pk %}" class="btn btn-glow btn-sm flex-fill">Bid</a>
+                            <form method="post" action="{% url 'listings:toggle_watchlist' listing.pk %}" class="flex-fill">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{% url 'accounts:my_bids' %}?tab=watchlist">
+                                <button type="submit" class="btn btn-glow-danger btn-sm w-100">
+                                    <i class="bi bi-heart-fill me-1"></i> Remove
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="card border-0 empty-state" style="border-radius:20px;">
+            <i class="bi bi-heart"></i>
+            <h5 class="fw-bold">Your watchlist is empty</h5>
+            <p class="text-body-secondary mb-3">Save items you're interested in</p>
+            <a href="{% url 'listings:list' %}" class="btn btn-glow">Browse Listings</a>
+        </div>
+    {% endif %}
+{% endif %}
+{% endblock %}

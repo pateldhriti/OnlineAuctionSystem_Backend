@@ -1,53 +1,83 @@
 {% extends 'base.html' %}
 
-{% block title %}My Profile{% endblock %}
+{% block title %}My Profile — AuctionHub{% endblock %}
 
 {% block content %}
-<div class="row">
+<div class="row g-4">
     <div class="col-md-4">
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <h5 class="card-title">{{ user.get_full_name|default:user.username }}</h5>
-                <p class="text-body-secondary mb-1">@{{ user.username }}</p>
-                <p class="text-body-secondary mb-1">{{ user.email }}</p>
+        <div class="card border-0 overflow-hidden" style="border-radius:20px;">
+            <div class="p-4 text-center" style="background:var(--primary-gradient);">
+                <div class="rounded-circle d-inline-flex align-items-center justify-content-center mx-auto mb-3" style="width:80px;height:80px;background:rgba(255,255,255,.2);color:#fff;font-size:2rem;font-weight:800;border:3px solid rgba(255,255,255,.3);">
+                    {{ user.first_name|first|upper|default:user.username|first|upper }}
+                </div>
+                <h4 class="fw-bold text-white mb-0">{{ user.get_full_name|default:user.username }}</h4>
+                <p class="mb-0" style="color:rgba(255,255,255,.7);">@{{ user.username }}</p>
+            </div>
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <i class="bi bi-envelope-fill" style="color:var(--primary);"></i>
+                    <span class="small">{{ user.email }}</span>
+                </div>
                 {% if user.profile.phone %}
-                    <p class="text-body-secondary mb-1">{{ user.profile.phone }}</p>
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-telephone-fill" style="color:var(--primary);"></i>
+                        <span class="small">{{ user.profile.phone }}</span>
+                    </div>
                 {% endif %}
                 {% if user.profile.bio %}
-                    <p class="mt-2">{{ user.profile.bio }}</p>
+                    <p class="text-body-secondary small mt-3 mb-2">{{ user.profile.bio }}</p>
                 {% endif %}
-                <p class="text-body-secondary small mt-2">Member since {{ user.profile.created_at|date:"N j, Y" }}</p>
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <i class="bi bi-calendar-event" style="color:#6c757d;"></i>
+                    <span class="text-body-secondary small">Member since {{ user.profile.created_at|date:"N j, Y" }}</span>
+                </div>
                 {% if user.profile.id_document %}
-                    <p class="mb-1">
-                        <span class="badge text-bg-success">Verification document uploaded</span>
-                        <a class="small d-block mt-1" href="{{ user.profile.id_document.url }}" target="_blank" rel="noopener">View file</a>
-                    </p>
+                    <div class="p-2 rounded-3 mb-3 d-flex align-items-center gap-2" style="background:rgba(0,184,148,.06);">
+                        <i class="bi bi-patch-check-fill" style="color:var(--success);"></i>
+                        <span class="small fw-semibold" style="color:var(--success);">Verified</span>
+                        <a class="small ms-auto" href="{{ user.profile.id_document.url }}" target="_blank" rel="noopener">View</a>
+                    </div>
                 {% else %}
-                    <p class="text-body-secondary small mb-1">No verification document uploaded.</p>
+                    <div class="p-2 rounded-3 mb-3 d-flex align-items-center gap-2" style="background:#f8f9fa;">
+                        <i class="bi bi-shield-exclamation text-body-secondary"></i>
+                        <span class="text-body-secondary small">No verification document</span>
+                    </div>
                 {% endif %}
-                <div class="d-flex gap-2 mt-3">
-                    <a href="{% url 'accounts:profile_edit' %}" class="btn btn-outline-primary btn-sm">Edit Profile</a>
-                    <a href="{% url 'accounts:password_change' %}" class="btn btn-outline-secondary btn-sm">Change Password</a>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'accounts:profile_edit' %}" class="btn btn-glow btn-sm flex-fill">
+                        <i class="bi bi-pencil me-1"></i> Edit
+                    </a>
+                    <a href="{% url 'accounts:password_change' %}" class="btn btn-outline-secondary btn-sm flex-fill" style="border-radius:10px;">
+                        <i class="bi bi-key me-1"></i> Password
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="col-md-8">
-        <div class="card shadow-sm">
-            <div class="card-header">Recently Viewed Listings</div>
-            <div class="card-body">
+        <div class="card border-0" style="border-radius:20px;">
+            <div class="card-body p-4">
+                <h5 class="fw-bold mb-3"><i class="bi bi-clock-history me-2" style="color:var(--primary);"></i>Recently Viewed</h5>
                 {% if recently_viewed %}
-                    <ul class="list-group list-group-flush">
+                    <div class="d-flex flex-column gap-2">
                         {% for listing in recently_viewed %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <a href="{% url 'listings:detail' listing.pk %}">{{ listing.title }}</a>
-                                <span class="badge bg-secondary">${{ listing.starting_price }}</span>
-                            </li>
+                            <a href="{% url 'listings:detail' listing.pk %}" class="d-flex align-items-center justify-content-between p-3 rounded-3 text-decoration-none" style="background:#f8f9fa;transition:background .2s;">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="d-flex align-items-center justify-content-center" style="width:36px;height:36px;border-radius:10px;background:rgba(108,92,231,.08);">
+                                        <i class="bi bi-box-seam" style="color:var(--primary);font-size:.85rem;"></i>
+                                    </div>
+                                    <span class="fw-semibold text-dark">{{ listing.title }}</span>
+                                </div>
+                                <span class="price-tag" style="font-size:.8rem;">${{ listing.starting_price }}</span>
+                            </a>
                         {% endfor %}
-                    </ul>
+                    </div>
                 {% else %}
-                    <p class="text-body-secondary mb-0">No recently viewed listings yet.</p>
+                    <div class="text-center py-4">
+                        <i class="bi bi-eye" style="font-size:2rem;color:var(--primary);opacity:.3;"></i>
+                        <p class="text-body-secondary small mt-2 mb-0">No recently viewed listings yet.</p>
+                    </div>
                 {% endif %}
             </div>
         </div>

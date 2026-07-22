@@ -36,6 +36,7 @@ class Listing(models.Model):
     )
     starting_price = models.DecimalField(max_digits=10, decimal_places=2)
     image = models.ImageField(upload_to='listing_images/', blank=True)
+    thumbnail = models.ImageField(upload_to='listing_thumbnails/', blank=True)
     watchers = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         related_name='watchlist',

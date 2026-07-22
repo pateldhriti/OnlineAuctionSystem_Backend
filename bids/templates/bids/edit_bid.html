@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Bid — {{ listing.title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-3">
+    <div class="col-md-5">
+        <div class="text-center mb-4">
+            <div class="d-inline-flex align-items-center justify-content-center mb-3" style="width:64px;height:64px;border-radius:18px;background:var(--primary-gradient);color:#fff;font-size:1.6rem;">
+                <i class="bi bi-pencil-square"></i>
+            </div>
+            <h2 class="fw-800" style="font-weight:800;">Edit Bid</h2>
+            <p class="text-body-secondary">Update your bid on <strong>{{ listing.title }}</strong></p>
+        </div>
+        <div class="card border-0" style="border-radius:20px;">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center justify-content-between p-3 rounded-3 mb-4" style="background:#f8f9fa;">
+                    <div>
+                        <p class="text-body-secondary small mb-0">Current bid amount</p>
+                        <p class="fs-4 fw-800 mb-0" style="color:var(--primary);font-weight:800;">${{ bid.amount }}</p>
+                    </div>
+                    <div class="text-end">
+                        <p class="text-body-secondary small mb-0">Placed on</p>
+                        <p class="fw-semibold small mb-0">{{ bid.created_at|date:"M d, Y H:i" }}</p>
+                    </div>
+                </div>
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold small" for="id_amount">New Amount ($)</label>
+                        <input type="number" name="amount" id="id_amount" class="form-control" step="0.01" min="0.01" value="{{ bid.amount }}" required>
+                        <div class="form-text small">You can only lower your bid. To bid higher, use "Place a Bid" on the listing page.</div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-glow flex-fill py-2">
+                            <i class="bi bi-check-circle me-1"></i> Update Bid
+                        </button>
+                        <a href="{% url 'bids:history' listing.pk %}" class="btn btn-outline-secondary flex-fill py-2" style="border-radius:10px;">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
