@@ -13,6 +13,23 @@ python manage.py runserver
 
 Visit `http://localhost:8000/`.
 
+## Loading initial data
+
+Initial data is stored as a JSON fixture (`fixtures/initial_data.json`) and
+loaded with Django's `loaddata`:
+
+```bash
+python manage.py loaddata initial_data
+```
+
+This gives you the same demo accounts, listings, bids, and a sample
+conversation described below, without running any code - just inserting the
+rows directly. To regenerate the fixture after changing the demo data:
+
+```bash
+python manage.py dumpdata auth.user accounts.userprofile listings.listing bids.bid conversations.conversation conversations.message --indent 2 -o fixtures/initial_data.json
+```
+
 ## Running the test suite
 
 ```bash
@@ -25,7 +42,10 @@ python manage.py test
 python manage.py seed_demo
 ```
 
-This creates demo accounts (password `demopass123` for all of them):
+This is the other way to get demo data - a management command that creates
+it via the ORM (idempotent, safe to re-run) rather than loading a fixture
+snapshot. Either one gets you the same demo accounts (password
+`demopass123` for all of them):
 
 - `admin` - staff account, see `/admin/`
 - `seller1` - lists three items across categories
