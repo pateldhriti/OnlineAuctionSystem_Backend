@@ -4,8 +4,7 @@ services:
     runtime: python
     plan: free
     buildCommand: "pip install -r requirements.txt && python manage.py collectstatic --noinput"
-    preDeployCommand: "python manage.py migrate --noinput && (python manage.py loaddata initial_data || true)"
-    startCommand: "gunicorn auction_project.wsgi --log-file -"
+    startCommand: "python manage.py migrate --noinput && (python manage.py loaddata initial_data || true) && gunicorn auction_project.wsgi --log-file -"
     envVars:
       - key: DJANGO_SECRET_KEY
         generateValue: true
