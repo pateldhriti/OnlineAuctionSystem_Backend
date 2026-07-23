@@ -271,3 +271,11 @@ def watchlist(request):
             ]
         }
     )
+
+
+def listing_timer(request, pk):
+    listing = get_object_or_404(Listing, pk=pk)
+    return JsonResponse({
+        'ends_at': listing.ends_at.isoformat() if listing.ends_at else None,
+        'is_active': listing.is_active,
+    })

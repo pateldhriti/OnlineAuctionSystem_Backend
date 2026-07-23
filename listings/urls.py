@@ -12,4 +12,5 @@ urlpatterns = [
     path('<int:pk>/edit/', views.update_listing, name='update'),
     path('<int:pk>/delete/', views.delete_listing, name='delete'),
     path('<int:pk>/watch/', views.toggle_watchlist, name='toggle_watchlist'),
+    path('<int:pk>/timer/', views.listing_timer, name='listing_timer'),
 ]

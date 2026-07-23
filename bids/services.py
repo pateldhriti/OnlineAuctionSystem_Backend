@@ -15,7 +15,7 @@ from .models import AutoBid, Bid
 
 SNIPE_WINDOW = timedelta(minutes=2)
 SNIPE_EXTENSION = timedelta(minutes=3)
-AUTO_BID_INCREMENT = Decimal('1.00')
+DEFAULT_AUTO_BID_INCREMENT = Decimal('1.00')
 
 
 def _extend_if_sniping(listing):
@@ -57,11 +57,15 @@ def process_bid(listing, bidder, amount):
 
     for ab in auto_bids:
         current_price = Bid.current_price_for(listing)
-        needed = current_price + AUTO_BID_INCREMENT
+        increment = ab.increment if ab.increment else DEFAULT_AUTO_BID_INCREMENT
+        needed = current_price + increment
 
         if needed > ab.max_amount:
-            notify_auto_bid_exceeded(ab.bidder, listing, current_price)
-            continue
+            if ab.max_amount > current_price:
+                needed = ab.max_amount
+            else:
+                notify_auto_bid_exceeded(ab.bidder, listing, current_price)
+                continue
 
         auto_bid_obj = Bid.objects.create(
             listing=listing,

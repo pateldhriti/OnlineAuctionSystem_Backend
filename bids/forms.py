@@ -56,12 +56,14 @@ class BidForm(forms.ModelForm):
 class AutoBidForm(forms.ModelForm):
     class Meta:
         model = AutoBid
-        fields = ['max_amount']
+        fields = ['max_amount', 'increment']
         widgets = {
             'max_amount': forms.NumberInput(attrs={'step': '0.01', 'min': '0', 'placeholder': 'Maximum auto-bid amount'}),
+            'increment': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01', 'placeholder': 'e.g. 5.00'}),
         }
         labels = {
             'max_amount': 'Max auto-bid amount ($)',
+            'increment': 'Bid increment ($)',
         }
 
     def __init__(self, *args, listing=None, bidder=None, **kwargs):
@@ -92,12 +94,19 @@ class AutoBidForm(forms.ModelForm):
             raise forms.ValidationError('You cannot auto-bid on your own listing.')
         return cleaned_data
 
+    def clean_increment(self):
+        increment = self.cleaned_data['increment']
+        if increment <= 0:
+            raise forms.ValidationError('Increment must be greater than zero.')
+        return increment
+
     def save(self, commit=True):
         ab, created = AutoBid.objects.update_or_create(
             listing=self.listing,
             bidder=self.bidder,
             defaults={
                 'max_amount': self.cleaned_data['max_amount'],
+                'increment': self.cleaned_data['increment'],
                 'is_active': True,
             },
         )

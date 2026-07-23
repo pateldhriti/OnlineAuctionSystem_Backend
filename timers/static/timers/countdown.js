@@ -20,8 +20,26 @@
         });
     }
 
+    function refreshTimers() {
+        document.querySelectorAll('[data-listing-id]').forEach(function (el) {
+            var listingId = el.getAttribute('data-listing-id');
+            fetch('/listings/' + listingId + '/timer/')
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (data.ends_at) {
+                        var timerEl = el.querySelector('[data-ends-at]') || el;
+                        if (timerEl.getAttribute('data-ends-at')) {
+                            timerEl.setAttribute('data-ends-at', data.ends_at);
+                        }
+                    }
+                })
+                .catch(function () {});
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         tick();
         setInterval(tick, 1000);
+        setInterval(refreshTimers, 10000);
     });
 })();

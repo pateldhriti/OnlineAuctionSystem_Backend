@@ -37,7 +37,7 @@
                         </div>
                     </div>
                     <div class="col-6">
-                        <div class="p-3 rounded-3" style="background:rgba(243,156,18,.06);">
+                        <div class="p-3 rounded-3" style="background:rgba(243,156,18,.06);" data-listing-id="{{ listing.pk }}">
                             <p class="text-body-secondary small mb-0">Time Left</p>
                             {% if listing.ends_at %}
                                 <p class="fs-6 fw-bold mb-0" data-ends-at="{{ listing.ends_at|date:'c' }}">Loading…</p>
@@ -197,9 +197,17 @@
                         </div>
                         {% if existing_auto_bid %}
                             <div class="p-3 rounded-3 mb-3" style="background:rgba(0,184,148,.06);border:1px solid rgba(0,184,148,.18);">
-                                <p class="mb-1 small text-body-secondary">Your auto-bid limit</p>
-                                <p class="fs-4 fw-800 mb-1" style="color:var(--success);font-weight:800;">${{ existing_auto_bid.max_amount }}</p>
-                                <p class="text-body-secondary small mb-0">System bids on your behalf up to this amount.</p>
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <p class="mb-1 small text-body-secondary">Your auto-bid limit</p>
+                                        <p class="fs-4 fw-800 mb-1" style="color:var(--success);font-weight:800;">${{ existing_auto_bid.max_amount }}</p>
+                                    </div>
+                                    <div class="text-end">
+                                        <p class="mb-1 small text-body-secondary">Increment</p>
+                                        <p class="fs-5 fw-bold mb-1" style="color:var(--success);">+${{ existing_auto_bid.increment }}</p>
+                                    </div>
+                                </div>
+                                <p class="text-body-secondary small mb-0">System bids on your behalf, increasing by ${{ existing_auto_bid.increment }} each time.</p>
                             </div>
                             <div class="d-flex gap-2 mb-3">
                                 <button class="btn btn-outline-primary btn-sm flex-fill" style="border-radius:10px;" type="button" data-bs-toggle="collapse" data-bs-target="#updateAutoBid">
