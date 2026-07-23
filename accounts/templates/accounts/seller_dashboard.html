@@ -95,6 +95,12 @@
                                     <div class="d-flex gap-1">
                                         <a href="{% url 'bids:history' row.listing.pk %}" class="btn btn-outline-secondary btn-sm" style="border-radius:8px;font-size:.75rem;">Bids</a>
                                         <a href="{% url 'listings:update' row.listing.pk %}" class="btn btn-outline-primary btn-sm" style="border-radius:8px;font-size:.75rem;">Edit</a>
+                                        <form method="post" action="{% url 'listings:delete' row.listing.pk %}" class="d-inline" onsubmit="return confirm('Delete &quot;{{ row.listing.title }}&quot;? This cannot be undone.');">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" style="border-radius:8px;font-size:.75rem;">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>
